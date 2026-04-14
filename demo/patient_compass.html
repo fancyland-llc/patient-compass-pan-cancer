@@ -1,0 +1,2690 @@
+﻿<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>The Patient Compass — Cancer Hallmark Assessment from Gene Panel Data</title>
+        <meta
+            name="description"
+            content="Free research tool mapping somatic gene mutations to the 8 hallmarks of cancer. Thermodynamic energy model from 198,862 patients across 378 studies and 37 cancer types. Bilingual EN/ES." />
+        <meta
+            name="keywords"
+            content="cancer hallmarks, gene panel, somatic mutations, tumor profiling, domain wall, thermodynamic model, cBioPortal, free cancer tool, hallmark state vector" />
+        <meta property="og:title" content="The Patient Compass — Cancer Hallmark Assessment Tool" />
+        <meta
+            property="og:description"
+            content="Free browser-based tool: map your gene panel results to the 8 hallmarks of cancer. Energy landscape, domain walls, and evolutionary exits from 198,862 patients." />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="patient_compass.html" />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            :root {
+                --bg: #f7f3ee;
+                --surface: #fffcf8;
+                --card: #fffcf8;
+                --border: rgba(0, 0, 0, 0.07);
+                --warm: #5b7f95;
+                --forest: #4a7c6f;
+                --sky: #6ba3d6;
+                --sage: #8fae8b;
+                --clay: #c4956a;
+                --plum: #7b6b8a;
+                --text: #2d3436;
+                --muted: #636e72;
+                --dim: #b2bec3;
+                --radius: 14px;
+                --shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+                --red: #8b5e3c;
+                --amber: #d4a017;
+                --green: #27ae60;
+            }
+            html {
+                scroll-behavior: smooth;
+            }
+            body {
+                background: var(--bg);
+                color: var(--text);
+                font-family: Georgia, "Times New Roman", serif;
+                line-height: 1.75;
+                min-height: 100vh;
+            }
+            a {
+                color: var(--forest);
+                text-decoration: none;
+            }
+            a:hover {
+                text-decoration: underline;
+            }
+
+            .container {
+                max-width: 860px;
+                margin: 0 auto;
+                padding: 0 1.5rem;
+            }
+            header {
+                text-align: center;
+                padding: 3rem 0 2rem;
+                background: linear-gradient(180deg, #eee9e1 0%, var(--bg) 100%);
+            }
+            header h1 {
+                font-size: 2rem;
+                font-weight: 400;
+                color: var(--forest);
+                letter-spacing: 0.5px;
+            }
+            header p.subtitle {
+                font-size: 1rem;
+                color: var(--muted);
+                margin-top: 0.4rem;
+                font-style: italic;
+            }
+            section {
+                padding: 2rem 0;
+            }
+            section + section {
+                border-top: 1px solid var(--border);
+            }
+            h2 {
+                font-size: 1.15rem;
+                font-weight: 600;
+                color: var(--warm);
+                margin-bottom: 1rem;
+                letter-spacing: 0.3px;
+            }
+            h3 {
+                font-size: 1rem;
+                font-weight: 600;
+                color: var(--text);
+                margin-bottom: 0.5rem;
+            }
+
+            /* ── Welcome ── */
+            .welcome {
+                max-width: 640px;
+                margin: 0 auto;
+                text-align: center;
+                padding: 0 1rem;
+                font-size: 1.02rem;
+                color: var(--text);
+                line-height: 1.85;
+            }
+            .welcome p + p {
+                margin-top: 1rem;
+            }
+
+            /* ── Stats row (hallmark cards — mobile-first: stack, then 5/3 on desktop) ── */
+            .stats-row {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.5rem;
+                justify-items: center;
+                margin: 1.25rem 0;
+            }
+            .stat {
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 0.7rem 0.8rem;
+                text-align: center;
+                width: 100%;
+                box-shadow: var(--shadow);
+            }
+            .stat .num {
+                font-size: 1.35rem;
+                font-weight: 700;
+                color: var(--forest);
+            }
+            .stat .lbl {
+                font-size: 0.72rem;
+                color: var(--muted);
+                margin-top: 0.15rem;
+                font-family: "Segoe UI", system-ui, sans-serif;
+            }
+
+            /* ── Section titles ── */
+            .section-title {
+                font-size: 1.3rem;
+                font-weight: 400;
+                color: var(--warm);
+                margin-bottom: 0.4rem;
+            }
+            .section-desc {
+                color: var(--muted);
+                font-size: 0.95rem;
+                margin-bottom: 1.5rem;
+                max-width: 680px;
+                line-height: 1.7;
+            }
+
+            /* ── Cards ── */
+            .card {
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 1.5rem;
+                margin-bottom: 1rem;
+                box-shadow: var(--shadow);
+            }
+
+            /* ── Forms ── */
+            .form-row {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0.75rem;
+                margin-bottom: 1rem;
+                align-items: flex-start;
+            }
+            .form-group {
+                display: flex;
+                flex-direction: column;
+                gap: 0.3rem;
+            }
+            .form-group label {
+                font-size: 0.85rem;
+                color: var(--muted);
+                font-weight: 600;
+            }
+            select,
+            input[type="text"] {
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                padding: 0.5rem 0.75rem;
+                font-size: 0.9rem;
+                font-family: inherit;
+                background: var(--surface);
+                color: var(--text);
+                min-width: 200px;
+            }
+            select:focus,
+            input:focus {
+                outline: 2px solid var(--sky);
+                border-color: transparent;
+            }
+
+            /* ── Gene grid ── */
+            .gene-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(105px, 1fr));
+                gap: 0.4rem;
+                margin: 0.75rem 0;
+            }
+            .gene-chip {
+                display: flex;
+                align-items: center;
+                gap: 0.35rem;
+                padding: 0.3rem 0.55rem;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                font-size: 0.8rem;
+                cursor: pointer;
+                background: var(--surface);
+                transition: all 0.15s;
+                user-select: none;
+            }
+            .gene-chip:hover {
+                border-color: var(--sky);
+            }
+            .gene-chip.active {
+                background: var(--warm);
+                color: #fff;
+                border-color: var(--warm);
+            }
+            .gene-chip .hallmark-dot {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                flex-shrink: 0;
+            }
+            .gene-chip input {
+                display: none;
+            }
+
+            /* ── Hallmark colors ── */
+            .hm-Prolif {
+                background: #e74c3c;
+            }
+            .hm-GrowSup {
+                background: #2980b9;
+            }
+            .hm-Death {
+                background: #8e44ad;
+            }
+            .hm-Immort {
+                background: #d4a017;
+            }
+            .hm-Invade {
+                background: #e67e22;
+            }
+            .hm-Immune {
+                background: #27ae60;
+            }
+            .hm-Genome {
+                background: #2c3e50;
+            }
+            .hm-Metab {
+                background: #16a085;
+            }
+
+            /* ── Button ── */
+            .btn {
+                display: inline-block;
+                padding: 0.65rem 1.5rem;
+                background: var(--forest);
+                color: #fff;
+                border: none;
+                border-radius: 10px;
+                font-size: 0.95rem;
+                font-family: inherit;
+                cursor: pointer;
+                letter-spacing: 0.3px;
+                transition: background 0.15s;
+            }
+            .btn:hover {
+                background: #3d6b5e;
+            }
+            .btn:disabled {
+                background: var(--dim);
+                cursor: not-allowed;
+            }
+
+            /* ── Results ── */
+            .results {
+                display: none;
+            }
+            .results.visible {
+                display: block;
+            }
+
+            /* ── Hallmark profile chips (mobile-first: 3-col grid, then 5/3 on desktop) ── */
+            .state-display {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 0.4rem;
+                padding: 1rem;
+                background: var(--bg);
+                border-radius: 10px;
+                margin: 0.75rem 0;
+                justify-items: center;
+            }
+            .state-display .hm-chip {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                width: 100%;
+                max-width: 90px;
+                padding: 0.4rem 0.3rem;
+                border-radius: 8px;
+                border: 2px solid var(--border);
+                transition: all 0.2s;
+            }
+            .state-display .hm-chip.on {
+                border-color: var(--forest);
+                background: #e8f5e9;
+            }
+            .state-display .hm-chip.off {
+                opacity: 0.35;
+            }
+            .state-display .hm-chip.blind {
+                border-style: dashed;
+            }
+            .state-display .hm-abbr {
+                font-size: 0.95rem;
+                font-weight: 700;
+                font-family: "Segoe UI", system-ui, sans-serif;
+            }
+            .state-display .hm-chip.on .hm-abbr {
+                color: var(--forest);
+            }
+            .state-display .hm-chip.off .hm-abbr {
+                color: var(--dim);
+            }
+            .state-display .hm-name {
+                font-size: 0.6rem;
+                color: var(--muted);
+                margin-top: 2px;
+                text-align: center;
+                line-height: 1.2;
+            }
+
+            .compass-row {
+                display: flex;
+                gap: 1rem;
+                flex-wrap: wrap;
+                margin: 0.75rem 0;
+            }
+            .compass-metric {
+                flex: 1;
+                min-width: 140px;
+                background: var(--bg);
+                border-radius: 10px;
+                padding: 1rem;
+                text-align: center;
+            }
+            .compass-metric .value {
+                font-size: 1.5rem;
+                font-weight: 700;
+            }
+            .compass-metric .label {
+                font-size: 0.75rem;
+                color: var(--muted);
+                margin-top: 0.2rem;
+            }
+            .compass-metric.good .value {
+                color: var(--green);
+            }
+            .compass-metric.warn .value {
+                color: var(--amber);
+            }
+            .compass-metric.bad .value {
+                color: var(--red);
+            }
+
+            .assessment-box {
+                border-left: 4px solid var(--muted);
+                padding: 0.75rem 1rem;
+                margin: 0.75rem 0;
+                border-radius: 0 8px 8px 0;
+                background: var(--bg);
+                font-size: 0.95rem;
+            }
+            .assessment-box.favorable {
+                border-color: var(--green);
+                background: #f0faf4;
+            }
+            .assessment-box.guarded {
+                border-color: var(--amber);
+                background: #fdf8e8;
+            }
+            .assessment-box.unfavorable {
+                border-color: var(--red);
+                background: #fdf0ee;
+            }
+
+            .exits-list {
+                list-style: none;
+                padding: 0;
+                margin: 0.5rem 0;
+            }
+            .exits-list li {
+                padding: 0.3rem 0.5rem;
+                margin: 0.2rem 0;
+                border-radius: 6px;
+                font-size: 0.88rem;
+            }
+            .exits-list li.blocked {
+                background: #eef2f7;
+                color: #546e7a;
+            }
+            .exits-list li.open {
+                background: #fff3e0;
+                color: #e65100;
+            }
+
+            .wall-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 0.88rem;
+                margin: 0.75rem 0;
+            }
+            .wall-table th {
+                text-align: left;
+                padding: 0.4rem 0.5rem;
+                border-bottom: 2px solid var(--border);
+                color: var(--muted);
+                font-weight: 600;
+                font-size: 0.8rem;
+            }
+            .wall-table td {
+                padding: 0.4rem 0.5rem;
+                border-bottom: 1px solid var(--border);
+            }
+
+            /* ── Doctor questions ── */
+            .doctor-box {
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 1.25rem 1.5rem;
+                box-shadow: var(--shadow);
+            }
+            .doctor-box ul {
+                margin: 0.5rem 0 0 1.2rem;
+                font-size: 0.95rem;
+            }
+            .doctor-box li {
+                margin-bottom: 0.4rem;
+            }
+
+            /* ── Disclaimer ── */
+            .disclaimer {
+                background: #fff3e0;
+                border: 1px solid #ffe0b2;
+                border-radius: var(--radius);
+                padding: 1rem 1.25rem;
+                font-size: 0.85rem;
+                color: #e65100;
+                margin-top: 1.5rem;
+            }
+
+            /* ── Footer ── */
+            footer {
+                text-align: center;
+                padding: 2rem 0;
+                color: var(--dim);
+                font-size: 0.8rem;
+                border-top: 1px solid var(--border);
+            }
+
+            /* ── Spanish toggle ── */
+            .lang-toggle {
+                display: inline-flex;
+                border: 1px solid var(--border);
+                border-radius: 8px;
+                overflow: hidden;
+                font-size: 0.8rem;
+                margin-left: 0.75rem;
+                vertical-align: middle;
+            }
+            .lang-toggle button {
+                border: none;
+                background: var(--surface);
+                padding: 0.3rem 0.6rem;
+                cursor: pointer;
+                font-family: inherit;
+                color: var(--muted);
+            }
+            .lang-toggle button.active {
+                background: var(--warm);
+                color: #fff;
+            }
+
+            .es {
+                display: none;
+            }
+            body.lang-es .en {
+                display: none;
+            }
+            body.lang-es .es {
+                display: inline;
+            }
+            body.lang-es .es-block {
+                display: block;
+            }
+
+            /* ── Discovery section ── */
+            .landscape-grid {
+                display: grid;
+                grid-template-columns: repeat(16, 1fr);
+                gap: 1px;
+                margin: 1rem auto;
+                max-width: 520px;
+                background: var(--border);
+                border-radius: 8px;
+                overflow: hidden;
+            }
+            .landscape-grid .cell {
+                aspect-ratio: 1;
+                transition: transform 0.15s;
+            }
+            .landscape-grid .cell.observed {
+                background: var(--forest);
+            }
+            .landscape-grid .cell.forbidden {
+                background: var(--bg);
+            }
+            .landscape-grid .cell.ground {
+                background: var(--sky);
+            }
+            .landscape-grid .cell.observed:hover {
+                transform: scale(1.8);
+                z-index: 2;
+                border-radius: 2px;
+            }
+            .landscape-legend {
+                display: flex;
+                justify-content: center;
+                gap: 1.5rem;
+                margin: 0.5rem 0;
+                font-size: 0.78rem;
+                color: var(--muted);
+                font-family: "Segoe UI", system-ui, sans-serif;
+            }
+            .landscape-legend span::before {
+                content: "";
+                display: inline-block;
+                width: 10px;
+                height: 10px;
+                border-radius: 2px;
+                margin-right: 4px;
+                vertical-align: middle;
+            }
+            .landscape-legend .leg-obs::before {
+                background: var(--forest);
+            }
+            .landscape-legend .leg-forb::before {
+                background: var(--bg);
+                border: 1px solid var(--border);
+            }
+            .landscape-legend .leg-ground::before {
+                background: var(--sky);
+            }
+
+            .discovery-cards {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+                gap: 1rem;
+                margin: 1.5rem 0;
+            }
+            .discovery-card {
+                background: var(--card);
+                border: 1px solid var(--border);
+                border-radius: var(--radius);
+                padding: 1.25rem;
+                box-shadow: var(--shadow);
+                text-align: center;
+            }
+            .discovery-card .dc-icon {
+                font-size: 2rem;
+                margin-bottom: 0.4rem;
+            }
+            .discovery-card .dc-title {
+                font-size: 0.95rem;
+                font-weight: 700;
+                color: var(--warm);
+                margin-bottom: 0.4rem;
+            }
+            .discovery-card .dc-body {
+                font-size: 0.85rem;
+                color: var(--muted);
+                line-height: 1.6;
+            }
+            .discovery-card .dc-num {
+                font-size: 1.4rem;
+                font-weight: 700;
+                color: var(--forest);
+            }
+
+            .insight-stripe {
+                background: linear-gradient(135deg, #e8f5e9 0%, #fff8e1 100%);
+                border: 1px solid #c8e6c9;
+                border-radius: var(--radius);
+                padding: 1.25rem 1.5rem;
+                margin: 1rem 0;
+                font-size: 0.93rem;
+                line-height: 1.7;
+                color: var(--text);
+            }
+            .insight-stripe strong {
+                color: var(--forest);
+            }
+
+            @media (min-width: 601px) {
+                /* Desktop: 5/3 split for hallmark cards */
+                .stats-row {
+                    grid-template-columns: repeat(5, 1fr);
+                    gap: 0.75rem;
+                }
+                .stats-row .stat:nth-child(6) {
+                    grid-column: 2;
+                }
+                .stat {
+                    padding: 0.9rem 1.2rem;
+                }
+
+                /* Desktop: 5/3 split for hallmark profile chips */
+                .state-display {
+                    grid-template-columns: repeat(5, 1fr);
+                    gap: 0.5rem;
+                    max-width: 520px;
+                    margin-left: auto;
+                    margin-right: auto;
+                }
+                .state-display .hm-chip:nth-child(6) {
+                    grid-column: 2;
+                }
+                .state-display .hm-chip {
+                    max-width: 96px;
+                    padding: 0.5rem 0.4rem;
+                }
+                .state-display .hm-abbr {
+                    font-size: 1.1rem;
+                }
+
+                .landscape-grid {
+                    grid-template-columns: repeat(32, 1fr);
+                }
+            }
+
+            @media (max-width: 600px) {
+                .compass-row {
+                    flex-direction: column;
+                }
+                .gene-grid {
+                    grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+                }
+                header h1 {
+                    font-size: 1.5rem;
+                }
+                .discovery-cards {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <header>
+                <h1>
+                    &#x1F9ED;
+                    <span class="en">The Patient Compass</span>
+                    <span class="es">La Brújula del Paciente</span>
+                    <span class="lang-toggle">
+                        <button class="active" onclick="setLang('en')">EN</button>
+                        <button onclick="setLang('es')">ES</button>
+                    </span>
+                </h1>
+                <p class="subtitle">
+                    <span class="en">Cancer hallmark assessment from gene panel data</span>
+                    <span class="es">Evaluación de marcadores del cáncer desde panel genético</span>
+                </p>
+            </header>
+
+            <!-- ═══════ WELCOME ═══════ -->
+            <section>
+                <div class="welcome">
+                    <p>
+                        <span class="en">
+                            If you or someone you love is facing cancer, we want you to know: you are not alone.
+                        </span>
+                        <span class="es">
+                            Si usted o alguien a quien ama enfrenta el cáncer, queremos que sepa: no está solo/a.
+                        </span>
+                    </p>
+                    <p>
+                        <span class="en">
+                            This page shares findings from a mathematical study of nearly 200,000 tumor profiles across
+                            378 published research studies. It looks for patterns&mdash;recurring combinations of the
+                            biological traits that drive cancer&mdash;and asks whether those patterns tell us something
+                            meaningful about outcomes.
+                        </span>
+                        <span class="es">
+                            Esta página comparte hallazgos de un estudio matemático de casi 200.000 perfiles tumorales
+                            en 378 estudios publicados. Busca patrones&mdash;combinaciones recurrentes de rasgos
+                            biológicos que impulsan el cáncer&mdash;y pregunta si esos patrones nos dicen algo
+                            significativo sobre los resultados.
+                        </span>
+                    </p>
+                    <p>
+                        <span class="en">
+                            Everything here has already been computed from anonymized public data available from
+                            <a href="https://www.cbioportal.org/api" target="_blank" rel="noopener">cBioPortal</a>
+                            . No personal information is collected, stored, or transmitted. This page simply presents
+                            what the research found.
+                        </span>
+                        <span class="es">
+                            Todo aquí ha sido calculado a partir de datos públicos anonimizados disponibles en
+                            <a href="https://www.cbioportal.org/api" target="_blank" rel="noopener">cBioPortal</a>
+                            . No se recopila, almacena ni transmite información personal. Esta página simplemente
+                            presenta lo que encontró la investigación.
+                        </span>
+                    </p>
+                </div>
+            </section>
+
+            <!-- ═══════ AT A GLANCE ═══════ -->
+            <section>
+                <div style="text-align: center">
+                    <h2 class="section-title">
+                        <span class="en">The Dataset</span>
+                        <span class="es">Los Datos</span>
+                    </h2>
+                    <p class="section-desc" style="margin: 0 auto 1rem">
+                        <span class="en">These numbers describe the full body of evidence the compass draws from.</span>
+                        <span class="es">
+                            Estos números describen el cuerpo completo de evidencia del que se nutre la brújula.
+                        </span>
+                    </p>
+                </div>
+                <div class="stats-row">
+                    <div class="stat">
+                        <div class="num">198,862</div>
+                        <div class="lbl">
+                            <span class="en">Patients</span>
+                            <span class="es">Pacientes</span>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <div class="num">378</div>
+                        <div class="lbl">
+                            <span class="en">Studies</span>
+                            <span class="es">Estudios</span>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <div class="num">37</div>
+                        <div class="lbl">
+                            <span class="en">Cancer Types</span>
+                            <span class="es">Tipos de Cáncer</span>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <div class="num">162</div>
+                        <div class="lbl">
+                            <span class="en">Distinct States</span>
+                            <span class="es">Estados Distintos</span>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <div class="num">45</div>
+                        <div class="lbl">
+                            <span class="en">Genes on Panel</span>
+                            <span class="es">Genes en Panel</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════ THE EIGHT HALLMARKS ═══════ -->
+            <section>
+                <div style="text-align: center">
+                    <h2 class="section-title">
+                        <span class="en">The Eight Hallmarks of Cancer</span>
+                        <span class="es">Los Ocho Sellos Distintivos del Cáncer</span>
+                    </h2>
+                    <p class="section-desc" style="margin: 0 auto 1rem">
+                        <span class="en">
+                            In 2000, biologists Douglas Hanahan and Robert Weinberg described the core capabilities
+                            every cancer must develop. Our compass maps 45 commonly sequenced genes onto these eight
+                            hallmarks to build a binary &ldquo;state vector&rdquo; for each tumor. The thermodynamic
+                            model below then evaluates the energy landscape, domain walls, and evolutionary exits for
+                            that state.
+                        </span>
+                        <span class="es">
+                            En el año 2000, los biólogos Douglas Hanahan y Robert Weinberg describieron las capacidades
+                            fundamentales que todo cáncer debe desarrollar. Nuestra brújula mapea 45 genes comúnmente
+                            secuenciados a estos ocho marcadores para construir un &ldquo;vector de estado&rdquo;
+                            binario para cada tumor. El modelo termodinámico luego evalúa el paisaje energético, los
+                            muros de dominio y las salidas evolutivas de ese estado.
+                        </span>
+                    </p>
+                </div>
+                <div class="stats-row" role="list" aria-label="Eight hallmarks of cancer with gene panel coverage">
+                    <div
+                        class="stat"
+                        role="listitem"
+                        style="border-left: 3px solid #e74c3c"
+                        aria-label="Proliferation: 9 genes on panel, well covered">
+                        <div class="lbl" style="font-weight: 700; color: var(--text)">
+                            <span class="en">Proliferation</span>
+                            <span class="es">Proliferación</span>
+                        </div>
+                        <div class="lbl">9 genes</div>
+                    </div>
+                    <div
+                        class="stat"
+                        role="listitem"
+                        style="border-left: 3px solid #2980b9"
+                        aria-label="Growth Suppression: 16 genes on panel, well covered">
+                        <div class="lbl" style="font-weight: 700; color: var(--text)">
+                            <span class="en">Growth Suppression</span>
+                            <span class="es">Supresión de Crecimiento</span>
+                        </div>
+                        <div class="lbl">16 genes</div>
+                    </div>
+                    <div
+                        class="stat"
+                        role="listitem"
+                        style="border-left: 3px solid #8e44ad"
+                        aria-label="Death Resistance: 5 genes on panel, well covered">
+                        <div class="lbl" style="font-weight: 700; color: var(--text)">
+                            <span class="en">Death Resistance</span>
+                            <span class="es">Resistencia a Muerte</span>
+                        </div>
+                        <div class="lbl">5 genes</div>
+                    </div>
+                    <div
+                        class="stat"
+                        role="listitem"
+                        style="border-left: 3px solid #d4a017"
+                        aria-label="Immortality: 1 gene only (ATRX), blind spot — limited panel coverage">
+                        <div class="lbl" style="font-weight: 700; color: var(--text)">
+                            <span class="en">Immortality</span>
+                            <span class="es">Inmortalidad</span>
+                        </div>
+                        <div class="lbl">1 gene (ATRX)</div>
+                    </div>
+                    <div
+                        class="stat"
+                        role="listitem"
+                        style="border-left: 3px solid #e67e22"
+                        aria-label="Invasion: 4 genes on panel, well covered">
+                        <div class="lbl" style="font-weight: 700; color: var(--text)">
+                            <span class="en">Invasion</span>
+                            <span class="es">Invasión</span>
+                        </div>
+                        <div class="lbl">4 genes</div>
+                    </div>
+                    <div
+                        class="stat"
+                        role="listitem"
+                        style="border-left: 3px solid #27ae60"
+                        aria-label="Immune Evasion: 1 gene only (JAK1), blind spot — limited panel coverage">
+                        <div class="lbl" style="font-weight: 700; color: var(--text)">
+                            <span class="en">Immune Evasion</span>
+                            <span class="es">Evasión Inmune</span>
+                        </div>
+                        <div class="lbl">1 gene (JAK1)</div>
+                    </div>
+                    <div
+                        class="stat"
+                        role="listitem"
+                        style="border-left: 3px solid #2c3e50"
+                        aria-label="Genome Instability: 11 genes on panel, well covered">
+                        <div class="lbl" style="font-weight: 700; color: var(--text)">
+                            <span class="en">Genome Instability</span>
+                            <span class="es">Inestabilidad Genómica</span>
+                        </div>
+                        <div class="lbl">11 genes</div>
+                    </div>
+                    <div
+                        class="stat"
+                        role="listitem"
+                        style="border-left: 3px solid #16a085"
+                        aria-label="Metabolic Rewiring: 2 genes only (IDH1, GNAS), blind spot — limited panel coverage">
+                        <div class="lbl" style="font-weight: 700; color: var(--text)">
+                            <span class="en">Metabolic Rewiring</span>
+                            <span class="es">Reprog. Metabólica</span>
+                        </div>
+                        <div class="lbl">2 genes</div>
+                    </div>
+                </div>
+                <p style="text-align: center; font-size: 0.85rem; color: var(--muted)">
+                    <span class="en">
+                        This tool uses a panel of
+                        <strong>45 well-studied cancer driver genes</strong>
+                        — the same genes found on most clinical gene panels your oncologist may order (such as
+                        FoundationOne&reg;, MSK&#8209;IMPACT&trade;, Tempus xT, or Guardant360&reg;). There is only one
+                        panel in this tool. Hallmarks covered by 5 or more of those 45 genes are
+                        <strong>well&nbsp;visible</strong>
+                        — when the tumor has activity in that hallmark, the panel is very likely to detect it. Hallmarks
+                        covered by only 1&ndash;2 genes (Immortality, Immune Evasion, Metabolism) are
+                        <strong>blind spots</strong>
+                        — the panel has so few genes in those areas that real tumor activity can go undetected. This
+                        matters for your results below.
+                    </span>
+                    <span class="es">
+                        Esta herramienta usa un panel de
+                        <strong>45 genes conductores del cáncer bien estudiados</strong>
+                        — los mismos genes que se encuentran en la mayoría de los paneles genéticos clínicos que su
+                        oncólogo podría ordenar (como FoundationOne&reg;, MSK&#8209;IMPACT&trade;, Tempus&nbsp;xT o
+                        Guardant360&reg;). Solo hay un panel en esta herramienta. Los marcadores cubiertos por 5 o más
+                        de esos 45 genes son
+                        <strong>bien&nbsp;visibles</strong>
+                        — cuando el tumor tiene actividad en ese marcador, el panel muy probablemente la detectará. Los
+                        marcadores cubiertos por solo 1&ndash;2 genes (Inmortalidad, Evasión Inmune, Metabolismo) son
+                        <strong>puntos ciegos</strong>
+                        — el panel tiene tan pocos genes en esas áreas que la actividad real del tumor puede pasar
+                        desapercibida. Esto importa para sus resultados abajo.
+                    </span>
+                </p>
+            </section>
+
+            <!-- ═══════ WHAT WE DISCOVERED ═══════ -->
+            <section>
+                <div style="text-align: center">
+                    <h2 class="section-title">
+                        <span class="en">What We Discovered</span>
+                        <span class="es">Lo Que Descubrimos</span>
+                    </h2>
+                    <p class="section-desc" style="margin: 0 auto 1rem">
+                        <span class="en">
+                            With 8 hallmarks, each on or off, there are 256 possible cancer states. We checked every one
+                            of them against 198,862 real patients. Here is the result:
+                        </span>
+                        <span class="es">
+                            Con 8 marcadores, cada uno encendido o apagado, hay 256 estados posibles de cáncer.
+                            Verificamos cada uno contra 198.862 pacientes reales. Este es el resultado:
+                        </span>
+                    </p>
+                </div>
+
+                <!-- State landscape grid -->
+                <div
+                    id="landscapeGrid"
+                    class="landscape-grid"
+                    role="img"
+                    aria-label="256-state cancer hallmark landscape: 162 observed, 94 forbidden, 1 base state"></div>
+                <div class="landscape-legend" role="list">
+                    <span class="leg-obs" role="listitem">
+                        <span class="en">Observed (162)</span>
+                        <span class="es">Observados (162)</span>
+                    </span>
+                    <span class="leg-forb" role="listitem">
+                        <span class="en">Never seen (94)</span>
+                        <span class="es">Nunca vistos (94)</span>
+                    </span>
+                    <span class="leg-ground">
+                        <span class="en">Base state (41,198 patients)</span>
+                        <span class="es">Estado base (41.198 pacientes)</span>
+                    </span>
+                </div>
+
+                <div class="insight-stripe">
+                    <span class="en">
+                        <strong>The pattern:</strong>
+                        Cancer does not explore freely. 37% of all possible hallmark combinations have
+                        <em>never been observed</em>
+                        in nearly 200,000 patients. The landscape has walls&mdash;forbidden boundaries that tumors
+                        cannot cross. Those walls predict
+                        <strong>patient survival time</strong>
+                        better than the individual hallmarks themselves.
+                    </span>
+                    <span class="es">
+                        <strong>El patrón:</strong>
+                        El cáncer no explora libremente. El 37% de todas las combinaciones posibles de marcadores
+                        <em>nunca se han observado</em>
+                        en casi 200.000 pacientes. El paisaje tiene muros&mdash;fronteras prohibidas que los tumores no
+                        pueden cruzar. Esos muros predicen el
+                        <strong>tiempo de supervivencia del paciente</strong>
+                        mejor que los marcadores individuales por sí solos.
+                    </span>
+                </div>
+
+                <div
+                    class="insight-stripe"
+                    style="background: linear-gradient(135deg, #e3f2fd 0%, #e8eaf6 100%); border-color: #bbdefb">
+                    <span class="en">
+                        <strong>The blue cell — Base state:</strong>
+                        This is cancer at its earliest detectable stage. The tumor has initiated, but has not yet
+                        acquired advanced evolutionary traits. The only two hallmarks active are
+                        <strong>Growth Suppression</strong>
+                        and
+                        <strong>Death Resistance</strong>
+                        — which almost always means a single gene:
+                        <strong>TP53</strong>
+                        (often with APC). It is the most common pattern in the entire dataset: 41,198 out of 198,862
+                        patients. Think of it as the foundation of the landscape — the first step a normal cell takes
+                        toward becoming cancer. Every other observed state branches outward from here, lighting up
+                        additional hallmarks as the tumor evolves.
+                    </span>
+                    <span class="es">
+                        <strong>La celda azul — Estado base:</strong>
+                        Este es el cáncer en su etapa detectable más temprana. El tumor se ha iniciado, pero aún
+                        no ha adquirido rasgos evolutivos avanzados. Los únicos dos marcadores activos son
+                        <strong>Supresión de Crecimiento</strong>
+                        y
+                        <strong>Resistencia a Muerte</strong>
+                        — que casi siempre significa un solo gen:
+                        <strong>TP53</strong>
+                        (frecuentemente con APC). Es el patrón más común en todo el conjunto de datos: 41.198 de 198.862
+                        pacientes. Piense en él como la base del paisaje — el primer paso que da una célula normal
+                        hacia convertirse en cáncer. Todos los demás estados observados se ramifican desde aquí,
+                        encendiendo marcadores adicionales a medida que el tumor evoluciona.
+                    </span>
+                </div>
+
+                <!-- Three discovery cards -->
+                <div class="discovery-cards">
+                    <div class="discovery-card">
+                        <div class="dc-icon">🔥</div>
+                        <div class="dc-title">
+                            <span class="en">The Frustrated Proliferator</span>
+                            <span class="es">El Proliferador Frustrado</span>
+                        </div>
+                        <div class="dc-body">
+                            <span class="en">
+                                A tumor that is
+                                <strong>growing but not invading</strong>
+                                in low-oxygen tissue is the single most dangerous pattern for the patient that we found.
+                                <br />
+                                <span class="dc-num">HR = 1.81</span>
+                                <br />
+                                In the study, the disease progressed 81% faster in patients with this pattern
+                                than in patients with the same cancer type whose tumors did not show this pattern.
+                                This pattern alone outperforms most gene-level predictors.
+                            </span>
+                            <span class="es">
+                                Un tumor que está
+                                <strong>creciendo pero no invadiendo</strong>
+                                en tejido de bajo oxígeno es el patrón tumoral más peligroso para el paciente que
+                                encontramos.
+                                <br />
+                                <span class="dc-num">HR = 1.81</span>
+                                <br />
+                                En el estudio, la enfermedad progresó un 81% más rápido en pacientes con este
+                                patrón que en pacientes con el mismo tipo de cáncer cuyos tumores no mostraron
+                                este patrón. Este patrón solo supera a la mayoría de predictores a nivel de gen.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="discovery-card">
+                        <div class="dc-icon">🫁</div>
+                        <div class="dc-title">
+                            <span class="en">Oxygen Changes Everything</span>
+                            <span class="es">El Oxígeno Cambia Todo</span>
+                        </div>
+                        <div class="dc-body">
+                            <span class="en">
+                                The same mutations behave
+                                <strong>differently</strong>
+                                depending on tissue oxygen. Blocked exits are
+                                <em>associated with longer patient survival</em>
+                                in hypoxic tissue (brain, pancreas) but
+                                <em>have no significant effect on patient survival</em>
+                                in oxygenated tissue (lung, breast).
+                                <br />
+                                <span class="dc-num">HR = 0.59</span>
+                                <br />
+                                In hypoxic tissue, patients with blocked exits lived 41% longer. O₂ tier is the
+                                strongest single predictor of patient outcomes in the model.
+                            </span>
+                            <span class="es">
+                                Las mismas mutaciones se comportan
+                                <strong>diferente</strong>
+                                según el oxígeno del tejido. Las salidas bloqueadas se
+                                <em>asocian con mayor supervivencia del paciente</em>
+                                en tejido hipóxico (cerebro, páncreas) pero
+                                <em>no tienen efecto significativo en la supervivencia del paciente</em>
+                                en tejido oxigenado (pulmón, mama).
+                                <br />
+                                <span class="dc-num">HR = 0.59</span>
+                                <br />
+                                En tejido hipóxico, los pacientes con salidas bloqueadas vivieron 41% más. El nivel de
+                                O₂ es el predictor más fuerte de resultados del paciente en el modelo.
+                            </span>
+                        </div>
+                    </div>
+                    <div class="discovery-card">
+                        <div class="dc-icon">🔭</div>
+                        <div class="dc-title">
+                            <span class="en">The Blind Spots</span>
+                            <span class="es">Los Puntos Ciegos</span>
+                        </div>
+                        <div class="dc-body">
+                            <span class="en">
+                                Three hallmarks (Immortality, Immune Evasion, Metabolism) are covered by only
+                                <strong>1&ndash;2 genes</strong>
+                                on common panels. When those hallmarks are silent, we literally
+                                <em>cannot see</em>
+                                what the tumor is doing along those axes.
+                                <br />
+                                <span class="dc-num">p = 10⁻⁹</span>
+                                <br />
+                                Sensor blindness is statistically significant.
+                            </span>
+                            <span class="es">
+                                Tres marcadores (Inmortalidad, Evasión Inmune, Metabolismo) están cubiertos por solo
+                                <strong>1&ndash;2 genes</strong>
+                                en paneles comunes. Cuando esos marcadores están silenciosos, literalmente
+                                <em>no podemos ver</em>
+                                lo que hace el tumor en esos ejes.
+                                <br />
+                                <span class="dc-num">p = 10⁻⁹</span>
+                                <br />
+                                La ceguera del sensor es estadísticamente significativa.
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="insight-stripe"
+                    style="background: linear-gradient(135deg, #e3f2fd 0%, #f3e5f5 100%); border-color: #bbdefb">
+                    <span class="en">
+                        <strong>Why this matters:</strong>
+                        Traditional approaches look at individual genes or individual hallmarks in isolation. We looked
+                        at the
+                        <em>whole state</em>
+                        &mdash;all 8 hallmarks together, in context of the tissue environment. The result is a
+                        thermodynamic energy landscape where
+                        <strong>patient survival time</strong>
+                        is predicted not by
+                        <em>which</em>
+                        hallmarks are active, but by the
+                        <em>walls between them</em>
+                        and the
+                        <em>oxygen</em>
+                        they sit in. Nothing like this currently exists in clinical oncology.
+                    </span>
+                    <span class="es">
+                        <strong>Por qué importa:</strong>
+                        Los enfoques tradicionales miran genes individuales o marcadores individuales de forma aislada.
+                        Nosotros miramos el
+                        <em>estado completo</em>
+                        &mdash;los 8 marcadores juntos, en el contexto del ambiente tisular. El resultado es un paisaje
+                        de energía termodinámico donde el
+                        <strong>tiempo de supervivencia del paciente</strong>
+                        se predice no por
+                        <em>cuáles</em>
+                        marcadores están activos, sino por los
+                        <em>muros entre ellos</em>
+                        y el
+                        <em>oxígeno</em>
+                        en que se encuentran. Nada como esto existe actualmente en la oncología clínica.
+                    </span>
+                </div>
+            </section>
+
+            <!-- ═══════ STEP 1: TISSUE TYPE ═══════ -->
+            <section>
+                <h2>
+                    <span class="en">Step 1 &mdash; Select tissue type</span>
+                    <span class="es">Paso 1 &mdash; Seleccione tipo de tejido</span>
+                </h2>
+                <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.75rem">
+                    <span class="en">
+                        Oxygen availability varies by tissue. This matters because the same mutation pattern behaves
+                        differently in high-oxygen lungs versus low-oxygen brain. The compass adjusts its energy model
+                        accordingly.
+                    </span>
+                    <span class="es">
+                        La disponibilidad de oxígeno varía según el tejido. Esto importa porque el mismo patrón de
+                        mutación se comporta de manera diferente en pulmones de alto oxígeno que en cerebro de bajo
+                        oxígeno. La brújula ajusta su modelo de energía acorde.
+                    </span>
+                </p>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>
+                            <span class="en">Cancer / Tissue</span>
+                            <span class="es">Cáncer / Tejido</span>
+                        </label>
+                        <select id="tissueSelect" onchange="updateTissue()">
+                            <option value="">—</option>
+                            <optgroup label="HIGH O₂ — Lungs, Breast, Skin, Kidney, Thyroid, Colon">
+                                <option value="luad">Lung adeno (LUAD)</option>
+                                <option value="lusc">Lung squamous (LUSC)</option>
+                                <option value="nsclc">NSCLC (other)</option>
+                                <option value="brca">Breast (BRCA)</option>
+                                <option value="skcm">Melanoma (SKCM)</option>
+                                <option value="ccrcc">Clear-cell renal (ccRCC)</option>
+                                <option value="prcc">Papillary renal (PRCC)</option>
+                                <option value="thca">Thyroid (THCA)</option>
+                                <option value="coadread">Colorectal (COADREAD)</option>
+                                <option value="bowel">Bowel (other)</option>
+                            </optgroup>
+                            <optgroup label="MEDIUM O₂ — Stomach, Bladder, Uterus, Cervix, Head/Neck">
+                                <option value="stad">Stomach (STAD)</option>
+                                <option value="egc">Early gastric (EGC)</option>
+                                <option value="esca">Esophageal (ESCA)</option>
+                                <option value="blca">Bladder (BLCA)</option>
+                                <option value="ucec">Uterine (UCEC)</option>
+                                <option value="cesc">Cervical (CESC)</option>
+                                <option value="hnsc">Head &amp; neck (HNSC)</option>
+                                <option value="chol">Cholangiocarcinoma (CHOL)</option>
+                            </optgroup>
+                            <optgroup label="LOW O₂ — Brain, Pancreas, Liver, Prostate, Ovary">
+                                <option value="difg">Diffuse glioma (DIFG)</option>
+                                <option value="mbn">Medulloblastoma (MBN)</option>
+                                <option value="paad">Pancreatic (PAAD)</option>
+                                <option value="hcc">Liver (HCC)</option>
+                                <option value="prad">Prostate (PRAD)</option>
+                                <option value="soft_tissue">Soft tissue sarcoma</option>
+                                <option value="gist">GIST</option>
+                                <option value="hgsoc">High-grade serous ovarian</option>
+                            </optgroup>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <span class="en">O₂ tier</span>
+                            <span class="es">Nivel de O₂</span>
+                        </label>
+                        <input
+                            type="text"
+                            id="o2Display"
+                            readonly
+                            style="width: 120px; text-align: center; font-weight: 600" />
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════ STEP 2: GENES ═══════ -->
+            <section>
+                <h2>
+                    <span class="en">Step 2 &mdash; Select mutated genes</span>
+                    <span class="es">Paso 2 &mdash; Seleccione genes mutados</span>
+                </h2>
+                <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem">
+                    <span class="en">Click each gene that has a somatic mutation on the patient's panel report.</span>
+                    <span class="es">
+                        Haga clic en cada gen que tenga una mutación somática en el informe del panel del paciente.
+                    </span>
+                </p>
+                <div id="geneGrid" class="gene-grid"></div>
+                <p style="font-size: 0.8rem; color: var(--dim); margin-top: 0.3rem">
+                    <span class="en">45 genes · Color = primary hallmark</span>
+                    <span class="es">45 genes · Color = marcador principal</span>
+                </p>
+            </section>
+
+            <!-- ═══════ COMPUTE ═══════ -->
+            <section style="text-align: center; padding: 1.5rem 0">
+                <button class="btn" id="computeBtn" onclick="compute()">
+                    <span class="en">&#x1F9ED; Compute Compass Reading</span>
+                    <span class="es">&#x1F9ED; Calcular Lectura de Brújula</span>
+                </button>
+            </section>
+
+            <!-- ═══════ RESULTS ═══════ -->
+            <div class="results" id="results">
+                <!-- State display -->
+                <section>
+                    <h2>
+                        <span class="en">Your Hallmark Profile</span>
+                        <span class="es">Su Perfil de Marcadores</span>
+                    </h2>
+                    <div class="card">
+                        <div id="stateDisplay" class="state-display"></div>
+                        <p
+                            id="stateDescription"
+                            style="text-align: center; font-size: 0.9rem; margin-top: 0.75rem; color: var(--muted)"></p>
+                    </div>
+                </section>
+
+                <!-- Compass metrics -->
+                <section>
+                    <h2>
+                        <span class="en">Compass Reading</span>
+                        <span class="es">Lectura de la Brújula</span>
+                    </h2>
+                    <div class="compass-row">
+                        <div class="compass-metric" id="metricHallmarks">
+                            <div class="value" id="valHallmarks">—</div>
+                            <div class="label">
+                                <span class="en">Active Hallmarks</span>
+                                <span class="es">Marcadores Activos</span>
+                            </div>
+                        </div>
+                        <div class="compass-metric" id="metricForbidden">
+                            <div class="value" id="valForbidden">—</div>
+                            <div class="label">
+                                <span class="en">Blocked Exits</span>
+                                <span class="es">Salidas Bloqueadas</span>
+                            </div>
+                        </div>
+                        <div class="compass-metric" id="metricEnergy">
+                            <div class="value" id="valEnergy">—</div>
+                            <div class="label">
+                                <span class="en">State Energy</span>
+                                <span class="es">Energía del Estado</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Clinical assessment -->
+                <section>
+                    <h2>
+                        <span class="en">Clinical Assessment</span>
+                        <span class="es">Evaluación Clínica</span>
+                    </h2>
+                    <div id="assessmentBox" class="assessment-box"></div>
+                </section>
+
+                <!-- Evolutionary exits -->
+                <section>
+                    <h2>
+                        <span class="en">Where the Tumor Can — and Cannot — Evolve Next</span>
+                        <span class="es">Hacia Dónde Puede — y No Puede — Evolucionar el Tumor</span>
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem">
+                        <span class="en">
+                            Tumors evolve by gaining or losing one hallmark at a time through new mutations. Each row
+                            below shows one possible next step the tumor could take.
+                            <strong style="color: #546e7a">&#x1F6E1; Blocked</strong>
+                            means that hallmark combination was
+                            <em>never observed</em>
+                            in any of 198,862 patients — the tumor effectively
+                            <strong>cannot</strong>
+                            go there. Blocked exits constrain the tumor and in hypoxic tissue are associated with longer
+                            patient survival.
+                            <strong style="color: #e65100">&#x26A0; Open</strong>
+                            means that neighboring state
+                            <em>does</em>
+                            exist in the data — the tumor
+                            <strong>could</strong>
+                            evolve in that direction. Open exits represent adaptive freedom for the tumor. The number of
+                            patients and percentage show how common that destination state is.
+                        </span>
+                        <span class="es">
+                            Los tumores evolucionan ganando o perdiendo un marcador a la vez mediante nuevas mutaciones.
+                            Cada fila abajo muestra un posible siguiente paso que el tumor podría dar.
+                            <strong style="color: #546e7a">&#x1F6E1; Bloqueada</strong>
+                            significa que esa combinación de marcadores
+                            <em>nunca se observó</em>
+                            en ninguno de 198.862 pacientes — el tumor efectivamente
+                            <strong>no puede</strong>
+                            ir ahí. Las salidas bloqueadas restringen al tumor y en tejido hipóxico se asocian con mayor
+                            supervivencia del paciente.
+                            <strong style="color: #e65100">&#x26A0; Abierta</strong>
+                            significa que ese estado vecino
+                            <em>sí</em>
+                            existe en los datos — el tumor
+                            <strong>podría</strong>
+                            evolucionar en esa dirección. Las salidas abiertas representan libertad adaptativa para el
+                            tumor. El número de pacientes y porcentaje muestran qué tan común es ese estado destino.
+                        </span>
+                    </p>
+                    <div class="card">
+                        <ul id="exitsList" class="exits-list"></ul>
+                    </div>
+                </section>
+
+                <!-- Wall features -->
+                <section>
+                    <h2>
+                        <span class="en">Domain Wall Features</span>
+                        <span class="es">Características del Muro de Dominio</span>
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem">
+                        <span class="en">
+                            Domain walls are boundaries between hallmark regions. When two adjacent hallmarks are both
+                            active (or one is active alone), it creates a distinct effect on patient survival. These Cox
+                            regression coefficients (β) and risk multipliers (HR) show the population-level effect on
+                            patient survival. HR &gt; 1 means the disease progressed faster than in patients
+                            without this pattern; HR &lt; 1 means it progressed slower.
+                        </span>
+                        <span class="es">
+                            Los muros de dominio son fronteras entre regiones de marcadores. Cuando dos marcadores
+                            adyacentes están ambos activos (o uno está activo solo), crea un efecto distinto en la
+                            supervivencia del paciente. Estos coeficientes de regresión Cox (β) y multiplicadores de
+                            riesgo (HR) muestran el efecto a nivel de población sobre la supervivencia del paciente. HR
+                            &gt; 1 significa que la enfermedad progresó más rápido que en pacientes sin este
+                            patrón; HR &lt; 1 significa que progresó más lento.
+                        </span>
+                    </p>
+                    <div class="card">
+                        <table class="wall-table">
+                            <thead>
+                                <tr>
+                                    <th>
+                                        <span class="en">Feature</span>
+                                        <span class="es">Característica</span>
+                                    </th>
+                                    <th>
+                                        <span class="en">Active?</span>
+                                        <span class="es">¿Activo?</span>
+                                    </th>
+                                    <th>β (Cox)</th>
+                                    <th>HR</th>
+                                    <th>
+                                        <span class="en">Interpretation</span>
+                                        <span class="es">Interpretación</span>
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody id="wallTableBody"></tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <!-- Visibility -->
+                <section>
+                    <h2>
+                        <span class="en">Sensor Visibility</span>
+                        <span class="es">Visibilidad del Sensor</span>
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem">
+                        <span class="en">
+                            The Patient Compass uses a single panel of
+                            <strong>45 cancer driver genes</strong>
+                            to detect which of the 8 hallmarks are active. But not all hallmarks are equally well
+                            covered. Five hallmarks have 4&ndash;16 genes each &mdash; a mutation in
+                            <em>any</em>
+                            of those genes lights up the hallmark, so these are
+                            <strong>reliably detected</strong>
+                            . Three hallmarks &mdash; Immortality (1 gene: ATRX), Immune Evasion (1 gene: JAK1), and
+                            Metabolic Rewiring (2 genes: IDH1, GNAS) &mdash; have very few genes on the panel. If the
+                            tumor is active in those areas through
+                            <em>other</em>
+                            genes not on our 45-gene panel, we will miss it entirely. This is a real limitation: the
+                            compass can only see what the panel measures, and three hallmarks are nearly invisible to
+                            it.
+                        </span>
+                        <span class="es">
+                            El Patient Compass usa un único panel de
+                            <strong>45 genes conductores del cáncer</strong>
+                            para detectar cuáles de los 8 marcadores están activos. Pero no todos los marcadores están
+                            igualmente bien cubiertos. Cinco marcadores tienen 4&ndash;16 genes cada uno &mdash; una
+                            mutación en
+                            <em>cualquiera</em>
+                            de esos genes activa el marcador, por lo que se
+                            <strong>detectan de manera confiable</strong>
+                            . Tres marcadores &mdash; Inmortalidad (1 gen: ATRX), Evasión Inmune (1 gen: JAK1) y
+                            Reprogramación Metabólica (2 genes: IDH1, GNAS) &mdash; tienen muy pocos genes en el panel.
+                            Si el tumor está activo en esas áreas a través de
+                            <em>otros</em>
+                            genes que no están en nuestro panel de 45 genes, lo perderemos por completo. Esta es una
+                            limitación real: la brújula solo puede ver lo que el panel mide, y tres marcadores son casi
+                            invisibles para él.
+                        </span>
+                    </p>
+                    <div class="card" id="visibilityCard"></div>
+                </section>
+
+                <!-- Prevalence -->
+                <section>
+                    <h2>
+                        <span class="en">State Prevalence</span>
+                        <span class="es">Prevalencia del Estado</span>
+                    </h2>
+                    <div class="card" id="prevalenceCard"></div>
+                </section>
+
+                <!-- Tailored questions -->
+                <section>
+                    <h2>
+                        <span class="en">Questions for Your Doctor</span>
+                        <span class="es">Preguntas para Su Médico</span>
+                    </h2>
+                    <p style="font-size: 0.85rem; color: var(--muted); margin-bottom: 0.5rem">
+                        <span class="en">
+                            Based on
+                            <strong>your specific results</strong>
+                            , these are the questions that matter most.
+                        </span>
+                        <span class="es">
+                            Basado en
+                            <strong>sus resultados específicos</strong>
+                            , estas son las preguntas más importantes.
+                        </span>
+                    </p>
+                    <div class="doctor-box">
+                        <ul id="tailoredQuestions"></ul>
+                    </div>
+                </section>
+            </div>
+            <!-- /results -->
+
+            <!-- ═══════ DISCLAIMER ═══════ -->
+            <div class="disclaimer">
+                <strong>
+                    <span class="en">Research Tool &mdash; Not for Clinical Decision-Making</span>
+                    <span class="es">Herramienta de Investigación &mdash; No para Decisiones Clínicas</span>
+                </strong>
+                <br />
+                <span class="en">
+                    This compass is a research prototype derived from retrospective observational data (cBioPortal). It
+                    has NOT been prospectively validated and must NOT be used to guide treatment decisions. The energy
+                    function and wall coefficients are population-level statistics, not individual predictions. All
+                    computation is performed locally in your browser &mdash; no patient data is transmitted.
+                </span>
+                <span class="es">
+                    Esta brújula es un prototipo de investigación derivado de datos observacionales retrospectivos
+                    (cBioPortal). NO ha sido validada prospectivamente y NO debe usarse para guiar decisiones de
+                    tratamiento. La función de energía y los coeficientes de muro son estadísticas a nivel de población,
+                    no predicciones individuales. Todo el cálculo se realiza localmente en su navegador &mdash; no se
+                    transmiten datos de pacientes.
+                </span>
+            </div>
+
+            <footer>
+                <p>
+                    <span class="en">Built with care by Fancyland LLC</span>
+                    <span class="es">Hecho con cariño por Fancyland LLC</span>
+                </p>
+                <p style="margin-top: 0.3rem">
+                    <span class="en">Free for patients and doctors, forever.</span>
+                    <span class="es">Gratis para pacientes y médicos, por siempre.</span>
+                </p>
+                <p style="margin-top: 0.5rem; font-size: 0.75rem">
+                    DOI:
+                    <a
+                        href="https://doi.org/10.5281/zenodo.19561701"
+                        target="_blank"
+                        rel="noopener"
+                        style="color: var(--forest)">
+                        10.5281/zenodo.19561701
+                    </a>
+                </p>
+            </footer>
+        </div>
+        <!-- /container -->
+
+        <script>
+            // ═══════════════════════════════════════════════════════════════════
+            // DATA — All derived from 198,862 patients, 378 studies
+            // ═══════════════════════════════════════════════════════════════════
+
+            const HM_NAMES = ["Prolif", "GrowSup", "Death", "Immort", "Invade", "Immune", "Genome", "Metab"];
+            const HM_LABELS_EN = [
+                "Proliferation",
+                "Growth Suppression",
+                "Death Resistance",
+                "Immortality",
+                "Invasion",
+                "Immune Evasion",
+                "Genome Instability",
+                "Metabolic Rewiring",
+            ];
+            const HM_LABELS_ES = [
+                "Proliferación",
+                "Supresión de Crecimiento",
+                "Resistencia a Muerte",
+                "Inmortalidad",
+                "Invasión",
+                "Evasión Inmune",
+                "Inestabilidad Genómica",
+                "Reprogramación Metabólica",
+            ];
+
+            // Gene → hallmark indices
+            const GENE_TO_HM = {
+                KRAS: [0],
+                BRAF: [0],
+                NRAS: [0],
+                ERBB2: [0],
+                ERBB3: [0],
+                MAP2K1: [0],
+                FGFR2: [0],
+                NF1: [0],
+                PIK3CA: [0, 2],
+                TP53: [1, 2],
+                APC: [1],
+                RB1: [1],
+                CDKN2A: [1],
+                SMAD4: [1],
+                SMAD2: [1],
+                SMAD3: [1],
+                TGFBR2: [1],
+                FBXW7: [1],
+                ACVR2A: [1],
+                NOTCH1: [1],
+                SOX9: [1],
+                TCF7L2: [1],
+                RNF43: [1],
+                AMER1: [1],
+                CTNNB1: [1, 4],
+                PTEN: [2],
+                CREBBP: [2],
+                TSC2: [2],
+                ATRX: [3, 6],
+                CDH1: [4],
+                FAT1: [4],
+                FAT4: [4],
+                JAK1: [5],
+                MLH1: [6],
+                MSH2: [6],
+                MSH6: [6],
+                PMS2: [6],
+                POLE: [6],
+                BRCA2: [6],
+                ATM: [6],
+                ARID1A: [6],
+                KMT2C: [6],
+                KMT2D: [6],
+                IDH1: [7],
+                GNAS: [7],
+            };
+
+            // All 45 genes in panel order
+            const ALL_GENES = [
+                "APC",
+                "TP53",
+                "KRAS",
+                "PIK3CA",
+                "SMAD4",
+                "FBXW7",
+                "BRAF",
+                "NRAS",
+                "PTEN",
+                "CTNNB1",
+                "RB1",
+                "ATM",
+                "RNF43",
+                "SOX9",
+                "TGFBR2",
+                "TCF7L2",
+                "SMAD2",
+                "AMER1",
+                "ACVR2A",
+                "ARID1A",
+                "BRCA2",
+                "ERBB2",
+                "ERBB3",
+                "FAT4",
+                "KMT2D",
+                "NF1",
+                "POLE",
+                "SMAD3",
+                "FAT1",
+                "NOTCH1",
+                "CREBBP",
+                "KMT2C",
+                "MSH6",
+                "CDH1",
+                "CDKN2A",
+                "MAP2K1",
+                "FGFR2",
+                "TSC2",
+                "IDH1",
+                "JAK1",
+                "ATRX",
+                "GNAS",
+                "MLH1",
+                "MSH2",
+                "PMS2",
+            ];
+
+            // Tissue → O2 tier
+            const TISSUE_O2 = {
+                luad: "HIGH",
+                lusc: "HIGH",
+                nsclc: "HIGH",
+                brca: "HIGH",
+                breast: "HIGH",
+                skcm: "HIGH",
+                mel: "HIGH",
+                ccrcc: "HIGH",
+                prcc: "HIGH",
+                thca: "HIGH",
+                coadread: "HIGH",
+                coad: "HIGH",
+                bowel: "HIGH",
+                stad: "MEDIUM",
+                stomach: "MEDIUM",
+                egc: "MEDIUM",
+                esca: "MEDIUM",
+                blca: "MEDIUM",
+                bladder: "MEDIUM",
+                ucec: "MEDIUM",
+                cesc: "MEDIUM",
+                hnsc: "MEDIUM",
+                chol: "MEDIUM",
+                ihch: "MEDIUM",
+                hcc: "LOW",
+                paad: "LOW",
+                pancreas: "LOW",
+                difg: "LOW",
+                mbn: "LOW",
+                soft_tissue: "LOW",
+                prad: "LOW",
+                prostate: "LOW",
+                gist: "LOW",
+                hgsoc: "LOW",
+                apad: "LOW",
+            };
+
+            // Observed states: {state_string: patient_count}
+            const OBSERVED_STATES = {
+                "01100000": 41198,
+                11100000: 29939,
+                10000000: 12504,
+                11100010: 11373,
+                "01100010": 11040,
+                "00000010": 10421,
+                10100000: 7609,
+                "01000000": 6233,
+                11101010: 4875,
+                "01101000": 4089,
+                11000000: 3996,
+                "00100000": 3575,
+                11101000: 3540,
+                10100010: 3344,
+                10000010: 3295,
+                "01101010": 2553,
+                "00001000": 2442,
+                "01001000": 2227,
+                11000010: 2133,
+                "01000010": 1984,
+                "01110010": 1915,
+                11110010: 1639,
+                "00000001": 1530,
+                10101000: 1492,
+                "00010010": 1389,
+                "01110011": 1171,
+                11111010: 1096,
+                "00100010": 1072,
+                11001010: 894,
+                "01001010": 864,
+                11101110: 856,
+                "01100001": 814,
+                11001000: 788,
+                "00001010": 784,
+                11100110: 721,
+                10101010: 712,
+                10001000: 712,
+                11100001: 598,
+                11101011: 563,
+                10000001: 524,
+                11100011: 470,
+                10001010: 459,
+                11111110: 359,
+                10010010: 356,
+                "00000011": 351,
+                "01111010": 345,
+                "01100100": 322,
+                11000001: 303,
+                "00101000": 291,
+                "01010010": 290,
+                "00000100": 287,
+                "01100011": 283,
+                11111011: 276,
+                10100001: 275,
+                10110010: 257,
+                11111111: 253,
+                "01100110": 242,
+                11100100: 232,
+                11010010: 218,
+                "01000001": 199,
+                11110011: 191,
+                "01101110": 181,
+                11101111: 176,
+                "00110010": 171,
+                10000011: 166,
+                10100110: 153,
+                11110110: 146,
+                10100011: 137,
+                11101001: 125,
+                11011010: 124,
+                11000011: 113,
+                "01101011": 111,
+                "00101010": 101,
+                "00000110": 101,
+                10000100: 101,
+                11100111: 98,
+                "01011010": 93,
+                "01111011": 87,
+                "01000011": 87,
+                11001011: 86,
+                "00011010": 77,
+                11000110: 73,
+                10111010: 70,
+                "01000100": 70,
+                10100100: 70,
+                "01101100": 68,
+                11001110: 67,
+                11101100: 64,
+                "01101001": 63,
+                "00010011": 61,
+                "01001001": 58,
+                "00001001": 50,
+                "01001110": 49,
+                11001001: 48,
+                10011010: 47,
+                10101110: 42,
+                "01001100": 35,
+                "01000110": 35,
+                "00100110": 34,
+                10000110: 32,
+                10001001: 26,
+                "01001011": 24,
+                "01100111": 23,
+                "00100100": 23,
+                "00001011": 22,
+                10010011: 20,
+                "00100011": 20,
+                11010011: 20,
+                10101011: 20,
+                "00001100": 19,
+                "00100001": 19,
+                11011011: 18,
+                "01010011": 18,
+                "00010110": 16,
+                11000100: 16,
+                10001100: 16,
+                11110111: 15,
+                10001011: 15,
+                "00101011": 14,
+                10110011: 14,
+                "01111110": 14,
+                10001110: 13,
+                "01011011": 12,
+                11001100: 12,
+                10100111: 11,
+                11100101: 11,
+                11001111: 11,
+                "00101110": 10,
+                10110110: 10,
+                "01101111": 10,
+                "00001110": 10,
+                "00111010": 9,
+                11011110: 8,
+                10101100: 8,
+                "01111111": 7,
+                11011111: 7,
+                11010110: 7,
+                10101001: 7,
+                "01110110": 7,
+                11000111: 6,
+                10111110: 5,
+                10010110: 5,
+                11000101: 5,
+                "01100101": 5,
+                "01001111": 4,
+                "01010110": 4,
+                "01000101": 4,
+                "00101100": 3,
+                "01110111": 3,
+                10011110: 3,
+                10101111: 3,
+                10111011: 3,
+                "00000101": 2,
+                "00001101": 2,
+                "00011011": 2,
+                "00000111": 2,
+                "00101001": 1,
+                11010111: 1,
+                "00110110": 1,
+                "00110011": 1,
+                "01000111": 1,
+                11101101: 1,
+            };
+
+            const OBSERVED_SET = new Set(Object.keys(OBSERVED_STATES));
+            const TOTAL_PATIENTS = 198862;
+
+            // Energy function coefficients (Cox PH, penalizer=0.01)
+            const ENERGY_COEFS = {
+                log_prev: 0.106189,
+                n_forbidden: 0.025729,
+                h_sum: 0.022609,
+                o2_high: -0.4268,
+                o2_low: 0.339145,
+                forb_x_low: -0.181886,
+                forb_x_high: -0.120688,
+            };
+
+            // Wall feature coefficients
+            const WALL_COEFS = {
+                TP53_coupled: {
+                    beta: 0.275639,
+                    en: "Both tumor suppressors lost — TP53 axis collapsed",
+                    es: "Ambos supresores perdidos — eje TP53 colapsado",
+                },
+                GrowSup_only: {
+                    beta: 0.040756,
+                    en: "Growth suppression lost without apoptosis block",
+                    es: "Supresión de crecimiento perdida sin bloqueo de apoptosis",
+                },
+                Death_only: {
+                    beta: -0.137876,
+                    en: "Apoptosis blocked but growth brakes intact",
+                    es: "Apoptosis bloqueada pero frenos de crecimiento intactos",
+                },
+                Aerobic_coupled: {
+                    beta: -0.042879,
+                    en: "Growth + invasion both active — aerobic adaptation",
+                    es: "Crecimiento + invasión ambos activos — adaptación aeróbica",
+                },
+                Prolif_only: {
+                    beta: 0.250482,
+                    en: "Growing but NOT invading — frustrated proliferator",
+                    es: "Creciendo pero SIN invadir — proliferador frustrado",
+                },
+                Invade_only: {
+                    beta: -0.023322,
+                    en: "Invading without proliferative drive",
+                    es: "Invadiendo sin impulso proliferativo",
+                },
+                Hypoxic_coupled: {
+                    beta: -0.905121,
+                    en: "Immortality + metabolism both active — hypoxic adaptation",
+                    es: "Inmortalidad + metabolismo ambos activos — adaptación hipóxica",
+                },
+                Immort_only: {
+                    beta: -0.135131,
+                    en: "Immortality acquired without metabolic rewiring",
+                    es: "Inmortalidad adquirida sin reprogramación metabólica",
+                },
+                Metab_only: {
+                    beta: -0.47331,
+                    en: "Metabolic rewiring without immortalization",
+                    es: "Reprogramación metabólica sin inmortalización",
+                },
+                Genome: { beta: -0.03712, en: "Genome instability active", es: "Inestabilidad genómica activa" },
+            };
+
+            // Visible hallmarks (5+ genes)
+            const VISIBLE_HMS = new Set([0, 1, 2, 4, 6]); // Prolif, GrowSup, Death, Invade, Genome
+            const BLIND_HMS = new Set([3, 5, 7]); // Immort, Immune, Metab
+
+            // ═══════════════════════════════════════════════════════════════════
+            // UI SETUP
+            // ═══════════════════════════════════════════════════════════════════
+
+            let selectedGenes = new Set();
+            let currentLang = "en";
+
+            function setLang(lang) {
+                currentLang = lang;
+                document.body.classList.toggle("lang-es", lang === "es");
+                document.documentElement.lang = lang;
+                document
+                    .querySelectorAll(".lang-toggle button")
+                    .forEach((b) => b.classList.toggle("active", b.textContent === lang.toUpperCase()));
+                // Rebuild landscape grid with correct language
+                buildLandscapeGrid();
+            }
+
+            function primaryHallmark(gene) {
+                const hms = GENE_TO_HM[gene];
+                return hms ? HM_NAMES[hms[0]] : "Genome";
+            }
+
+            function buildGeneGrid() {
+                const grid = document.getElementById("geneGrid");
+                grid.innerHTML = "";
+                ALL_GENES.forEach((gene) => {
+                    const hm = primaryHallmark(gene);
+                    const chip = document.createElement("label");
+                    chip.className = "gene-chip";
+                    chip.innerHTML = `<span class="hallmark-dot hm-${hm}"></span>${gene}`;
+                    chip.onclick = () => {
+                        if (selectedGenes.has(gene)) {
+                            selectedGenes.delete(gene);
+                            chip.classList.remove("active");
+                        } else {
+                            selectedGenes.add(gene);
+                            chip.classList.add("active");
+                        }
+                    };
+                    grid.appendChild(chip);
+                });
+            }
+
+            function updateTissue() {
+                const tissue = document.getElementById("tissueSelect").value;
+                const o2 = TISSUE_O2[tissue] || "";
+                const display = document.getElementById("o2Display");
+                display.value = o2;
+                display.style.color =
+                    o2 === "HIGH"
+                        ? "var(--sky)"
+                        : o2 === "MEDIUM"
+                          ? "var(--clay)"
+                          : o2 === "LOW"
+                            ? "var(--red)"
+                            : "var(--dim)";
+            }
+
+            // ═══════════════════════════════════════════════════════════════════
+            // COMPUTATION — All local, no data leaves the browser
+            // ═══════════════════════════════════════════════════════════════════
+
+            function hammingNeighbors(stateStr) {
+                const neighbors = [];
+                for (let i = 0; i < 8; i++) {
+                    const arr = stateStr.split("");
+                    arr[i] = arr[i] === "0" ? "1" : "0";
+                    neighbors.push(arr.join(""));
+                }
+                return neighbors;
+            }
+
+            function compute() {
+                const tissue = document.getElementById("tissueSelect").value;
+                if (!tissue) {
+                    alert(currentLang === "es" ? "Seleccione un tipo de tejido" : "Please select a tissue type");
+                    return;
+                }
+
+                // 1. Build hallmark vector from selected genes
+                const h = [0, 0, 0, 0, 0, 0, 0, 0];
+                selectedGenes.forEach((gene) => {
+                    const hms = GENE_TO_HM[gene];
+                    if (hms) hms.forEach((i) => (h[i] = 1));
+                });
+                const stateStr = h.join("");
+
+                // 2. O2 tier
+                const o2 = TISSUE_O2[tissue];
+                const o2High = o2 === "HIGH" ? 1 : 0;
+                const o2Low = o2 === "LOW" ? 1 : 0;
+
+                // 3. Topology
+                const neighbors = hammingNeighbors(stateStr);
+                const forbiddenExits = [];
+                const openExits = [];
+                neighbors.forEach((nbr, i) => {
+                    const action =
+                        h[i] === 1
+                            ? currentLang === "es"
+                                ? "Perder"
+                                : "Lose"
+                            : currentLang === "es"
+                              ? "Ganar"
+                              : "Gain";
+                    if (!OBSERVED_SET.has(nbr)) {
+                        forbiddenExits.push({ hallmark: HM_NAMES[i], idx: i, action, neighbor: nbr });
+                    } else {
+                        openExits.push({
+                            hallmark: HM_NAMES[i],
+                            idx: i,
+                            action,
+                            neighbor: nbr,
+                            count: OBSERVED_STATES[nbr],
+                        });
+                    }
+                });
+                const nForbidden = forbiddenExits.length;
+
+                // 4. Prevalence
+                const prevalence = OBSERVED_STATES[stateStr] || 0;
+                const logPrev = Math.log(Math.max(prevalence, 1));
+
+                // 5. Hallmark sum
+                const hSum = h.reduce((a, b) => a + b, 0);
+
+                // 6. Energy function
+                const energy =
+                    ENERGY_COEFS.log_prev * logPrev +
+                    ENERGY_COEFS.n_forbidden * nForbidden +
+                    ENERGY_COEFS.h_sum * hSum +
+                    ENERGY_COEFS.o2_high * o2High +
+                    ENERGY_COEFS.o2_low * o2Low +
+                    ENERGY_COEFS.forb_x_low * nForbidden * o2Low +
+                    ENERGY_COEFS.forb_x_high * nForbidden * o2High;
+
+                // 7. Wall features
+                const walls = {
+                    TP53_coupled: h[1] * h[2],
+                    GrowSup_only: h[1] * (1 - h[2]),
+                    Death_only: h[2] * (1 - h[1]),
+                    Aerobic_coupled: h[0] * h[4],
+                    Prolif_only: h[0] * (1 - h[4]),
+                    Invade_only: h[4] * (1 - h[0]),
+                    Hypoxic_coupled: h[3] * h[7],
+                    Immort_only: h[3] * (1 - h[7]),
+                    Metab_only: h[7] * (1 - h[3]),
+                    Genome: h[6],
+                };
+
+                // 8. Visibility
+                const hypVisible = h[3] === 1 || h[7] === 1;
+
+                // 9. Effective β(N_forbidden) for this O2 tier
+                const betaEff =
+                    ENERGY_COEFS.n_forbidden +
+                    (o2Low ? ENERGY_COEFS.forb_x_low : 0) +
+                    (o2High ? ENERGY_COEFS.forb_x_high : 0);
+
+                // ═══════ RENDER ═══════
+                renderResults({
+                    h,
+                    stateStr,
+                    o2,
+                    nForbidden,
+                    prevalence,
+                    logPrev,
+                    hSum,
+                    energy,
+                    walls,
+                    forbiddenExits,
+                    openExits,
+                    hypVisible,
+                    betaEff,
+                    tissue,
+                });
+            }
+
+            function renderResults(r) {
+                const results = document.getElementById("results");
+                results.classList.add("visible");
+
+                // State display — hallmark chips
+                const stateDiv = document.getElementById("stateDisplay");
+                const hmLabelsForChips = currentLang === "es" ? HM_LABELS_ES : HM_LABELS_EN;
+                const ABBR = ["Pr", "Gr", "De", "Im", "In", "Im", "Ge", "Me"];
+                stateDiv.innerHTML = r.h
+                    .map((b, i) => {
+                        const isBlind = BLIND_HMS.has(i);
+                        const cls = (b ? "on" : "off") + (isBlind ? " blind" : "");
+                        const status = b
+                            ? currentLang === "es"
+                                ? "activo"
+                                : "active"
+                            : currentLang === "es"
+                              ? "inactivo"
+                              : "inactive";
+                        const blindTag = isBlind
+                            ? currentLang === "es"
+                                ? ", cobertura limitada"
+                                : ", limited coverage"
+                            : "";
+                        const ariaL = `${hmLabelsForChips[i]}: ${status}${blindTag}`;
+                        return `<div class="hm-chip ${cls}" role="img" aria-label="${ariaL}"><span class="hm-abbr" aria-hidden="true">${ABBR[i]}</span><span class="hm-name">${hmLabelsForChips[i]}</span></div>`;
+                    })
+                    .join("");
+
+                const desc = document.getElementById("stateDescription");
+                const activeNames = [];
+                r.h.forEach((b, i) => {
+                    if (b) activeNames.push(hmLabelsForChips[i]);
+                });
+                desc.textContent =
+                    activeNames.length > 0
+                        ? (currentLang === "es" ? "Activos: " : "Active: ") + activeNames.join(" + ")
+                        : currentLang === "es"
+                          ? "ESTADO BASE — el tumor se ha iniciado, pero a\u00fan no ha adquirido rasgos evolutivos avanzados en este panel"
+                          : "BASE STATE — the tumor has initiated, but has not yet acquired advanced evolutionary traits on this panel";
+
+                // Compass metrics
+                const mH = document.getElementById("metricHallmarks");
+                document.getElementById("valHallmarks").textContent = `${r.hSum}/8`;
+                mH.className = "compass-metric " + (r.hSum <= 2 ? "good" : r.hSum <= 4 ? "warn" : "bad");
+
+                const mF = document.getElementById("metricForbidden");
+                document.getElementById("valForbidden").textContent = r.nForbidden;
+                const forbClass =
+                    r.o2 === "LOW"
+                        ? r.nForbidden >= 3
+                            ? "good"
+                            : r.nForbidden >= 1
+                              ? "warn"
+                              : "bad"
+                        : r.nForbidden >= 3
+                          ? "warn"
+                          : "good";
+                mF.className = "compass-metric " + forbClass;
+
+                const mE = document.getElementById("metricEnergy");
+                document.getElementById("valEnergy").textContent = r.energy.toFixed(2);
+                mE.className = "compass-metric " + (r.energy < 0 ? "good" : r.energy < 0.5 ? "warn" : "bad");
+
+                // Clinical assessment
+                renderAssessment(r);
+
+                // Evolutionary exits
+                const exitsList = document.getElementById("exitsList");
+                exitsList.innerHTML = "";
+                const hmLabels = currentLang === "es" ? HM_LABELS_ES : HM_LABELS_EN;
+                r.forbiddenExits.forEach((e) => {
+                    const li = document.createElement("li");
+                    li.className = "blocked";
+                    const vis = BLIND_HMS.has(e.idx) ? (currentLang === "es" ? " [CIEGO]" : " [BLIND]") : "";
+                    const nbrBits = e.neighbor.split("").map(Number);
+                    const nbrActive = [];
+                    nbrBits.forEach((b, i) => {
+                        if (b) nbrActive.push(HM_NAMES[i]);
+                    });
+                    const nbrDesc =
+                        nbrActive.length > 0
+                            ? nbrActive.join(" + ")
+                            : currentLang === "es"
+                              ? "estado base"
+                              : "base state";
+                    const blockedLabel = currentLang === "es" ? "BLOQUEADA" : "BLOCKED";
+                    const neverLabel =
+                        currentLang === "es"
+                            ? "nunca observado en 198.862 pacientes"
+                            : "never observed in 198,862 patients";
+                    li.innerHTML = `🛡 ${e.action} <strong>${hmLabels[e.idx]}</strong>${vis} → ${blockedLabel} <span style="color:var(--muted);font-size:.82rem">(${nbrDesc} — ${neverLabel})</span>`;
+                    exitsList.appendChild(li);
+                });
+                r.openExits.forEach((e) => {
+                    const li = document.createElement("li");
+                    li.className = "open";
+                    const vis = BLIND_HMS.has(e.idx) ? (currentLang === "es" ? " [CIEGO]" : " [BLIND]") : "";
+                    const pct = ((e.count / TOTAL_PATIENTS) * 100).toFixed(2);
+                    li.innerHTML = `⚠ ${e.action} <strong>${hmLabels[e.idx]}</strong>${vis} → ${currentLang === "es" ? "ABIERTA" : "OPEN"} (${e.count.toLocaleString()} ${currentLang === "es" ? "pacientes" : "patients"}, ${pct}%)`;
+                    exitsList.appendChild(li);
+                });
+
+                // Wall features
+                const wallBody = document.getElementById("wallTableBody");
+                wallBody.innerHTML = "";
+                Object.entries(WALL_COEFS).forEach(([key, wc]) => {
+                    const active = r.walls[key];
+                    const hr = Math.exp(wc.beta);
+                    const interp = currentLang === "es" ? wc.es : wc.en;
+                    const tr = document.createElement("tr");
+                    tr.style.opacity = active ? "1" : "0.4";
+                    const hrColor = wc.beta > 0.1 ? "var(--red)" : wc.beta < -0.1 ? "var(--green)" : "var(--muted)";
+                    tr.innerHTML = `<td>${key.replace(/_/g, " ")}</td><td>${active ? "<strong>YES</strong>" : "no"}</td><td>${wc.beta >= 0 ? "+" : ""}${wc.beta.toFixed(3)}</td><td style="color:${hrColor};font-weight:600">${hr.toFixed(3)}</td><td style="font-size:.82rem;color:var(--muted)">${interp}</td>`;
+                    wallBody.appendChild(tr);
+                });
+
+                // Visibility — tell the patient's specific story
+                const visCard = document.getElementById("visibilityCard");
+                const hmL = currentLang === "es" ? HM_LABELS_ES : HM_LABELS_EN;
+                const es = currentLang === "es";
+                // Gene counts per hallmark on our 45-gene panel
+                const HM_GENE_COUNTS = [9, 16, 5, 1, 4, 1, 11, 2];
+                const HM_GENE_NAMES = [
+                    "KRAS, BRAF, NRAS, ERBB2, ERBB3, MAP2K1, FGFR2, NF1, PIK3CA",
+                    "TP53, APC, RB1, CDKN2A, SMAD4, SMAD2, SMAD3, TGFBR2, FBXW7, ACVR2A, NOTCH1, SOX9, TCF7L2, RNF43, AMER1, CTNNB1",
+                    "PIK3CA, TP53, PTEN, CREBBP, TSC2",
+                    "ATRX",
+                    "CTNNB1, CDH1, FAT1, FAT4",
+                    "JAK1",
+                    "MLH1, MSH2, MSH6, PMS2, POLE, BRCA2, ATM, ARID1A, KMT2C, KMT2D, ATRX",
+                    "IDH1, GNAS",
+                ];
+
+                // Build three categories for THIS patient's data
+                const confirmed = []; // Active AND well-covered — we trust ON
+                const trustedOff = []; // Inactive AND well-covered — we trust OFF
+                const blindOff = []; // Inactive AND poorly covered — we DON'T KNOW
+                const blindOn = []; // Active BUT poorly covered — detected, but may undercount
+
+                r.h.forEach((active, i) => {
+                    const isBlind = BLIND_HMS.has(i);
+                    const entry = {
+                        name: hmL[i],
+                        shortName: HM_NAMES[i],
+                        genes: HM_GENE_COUNTS[i],
+                        geneList: HM_GENE_NAMES[i],
+                        idx: i,
+                    };
+                    if (active && !isBlind) confirmed.push(entry);
+                    else if (active && isBlind) blindOn.push(entry);
+                    else if (!active && !isBlind) trustedOff.push(entry);
+                    else blindOff.push(entry); // !active && isBlind
+                });
+
+                let visHTML = "";
+
+                // 1. What we confidently detected
+                if (confirmed.length > 0) {
+                    const names = confirmed
+                        .map((e) => `<strong>${e.name}</strong> (${e.genes} ${es ? "genes" : "genes"})`)
+                        .join(", ");
+                    visHTML += `<p style="margin-bottom:0.6rem">
+                        <span style="color:var(--green);font-weight:600">${es ? "✓ DETECTADO CON CONFIANZA" : "✓ CONFIDENTLY DETECTED"}</span><br/>
+                        ${
+                            es
+                                ? `El panel tiene buena cobertura para ${names}. Estas detecciones son confiables — múltiples genes cubren ${confirmed.length === 1 ? "este marcador" : "estos marcadores"}, así que si ${confirmed.length === 1 ? "está" : "están"} activo${confirmed.length === 1 ? "" : "s"}, el panel lo verá.`
+                                : `The panel has strong coverage for ${names}. These detections are reliable — multiple genes cover ${confirmed.length === 1 ? "this hallmark" : "these hallmarks"}, so if ${confirmed.length === 1 ? "it is" : "they are"} active, the panel will see it.`
+                        }
+                    </p>`;
+                }
+
+                // 2. What we detected in a blind spot (rare but possible)
+                if (blindOn.length > 0) {
+                    const names = blindOn
+                        .map((e) => `<strong>${e.name}</strong> (${es ? "solo" : "only"} ${e.geneList})`)
+                        .join(", ");
+                    visHTML += `<p style="margin-bottom:0.6rem">
+                        <span style="color:var(--amber);font-weight:600">${es ? "⚠ DETECTADO, PERO CON COBERTURA LIMITADA" : "⚠ DETECTED, BUT WITH LIMITED COVERAGE"}</span><br/>
+                        ${
+                            es
+                                ? `${names} ${blindOn.length === 1 ? "está activo" : "están activos"}, pero ${blindOn.length === 1 ? "este marcador tiene" : "estos marcadores tienen"} muy pocos genes en el panel. La detección es real, pero el tumor podría tener actividad adicional a través de genes no medidos.`
+                                : `${names} ${blindOn.length === 1 ? "is" : "are"} active, but ${blindOn.length === 1 ? "this hallmark has" : "these hallmarks have"} very few genes on the panel. The detection is real, but the tumor may have additional activity through unmeasured genes.`
+                        }
+                    </p>`;
+                }
+
+                // 3. What's OFF and we trust it
+                if (trustedOff.length > 0) {
+                    const names = trustedOff
+                        .map((e) => `<strong>${e.name}</strong> (${e.genes} ${es ? "genes" : "genes"})`)
+                        .join(", ");
+                    visHTML += `<p style="margin-bottom:0.6rem">
+                        <span style="color:var(--muted);font-weight:600">${es ? "— NO DETECTADO (COBERTURA CONFIABLE)" : "— NOT DETECTED (RELIABLE COVERAGE)"}</span><br/>
+                        ${
+                            es
+                                ? `${names} no ${trustedOff.length === 1 ? "muestra" : "muestran"} mutaciones. Con ${trustedOff.length === 1 ? "buena cobertura en este marcador" : "buena cobertura en estos marcadores"}, probablemente ${trustedOff.length === 1 ? "realmente está" : "realmente están"} inactivo${trustedOff.length === 1 ? "" : "s"}.`
+                                : `${names} ${trustedOff.length === 1 ? "shows" : "show"} no mutations. With strong coverage on ${trustedOff.length === 1 ? "this hallmark" : "these hallmarks"}, ${trustedOff.length === 1 ? "it is" : "they are"} likely genuinely inactive.`
+                        }
+                    </p>`;
+                }
+
+                // 4. The critical blind spots — inactive AND poorly covered
+                if (blindOff.length > 0) {
+                    const names = blindOff
+                        .map((e) => `<strong>${e.name}</strong> (${es ? "solo" : "only"} ${e.geneList})`)
+                        .join(", ");
+                    visHTML += `<p style="margin-bottom:0.6rem">
+                        <span style="color:var(--amber);font-weight:600">${es ? "⚠ PUNTO CIEGO — NO SABEMOS" : "⚠ BLIND SPOT — WE DO NOT KNOW"}</span><br/>
+                        ${
+                            es
+                                ? `${names} ${blindOff.length === 1 ? "aparece" : "aparecen"} inactivo${blindOff.length === 1 ? "" : "s"}, pero el panel tiene tan pocos genes para ${blindOff.length === 1 ? "este marcador" : "estos marcadores"} que podría${blindOff.length === 1 ? "" : "n"} estar activo${blindOff.length === 1 ? "" : "s"} sin que lo sepamos. ${blindOff.length === 1 ? "Este es" : "Estos son"} punto${blindOff.length === 1 ? "" : "s"} ciego${blindOff.length === 1 ? "" : "s"} real${blindOff.length === 1 ? "" : "es"} en los datos.`
+                                : `${names} ${blindOff.length === 1 ? "appears" : "appear"} inactive, but the panel has so few genes covering ${blindOff.length === 1 ? "this hallmark" : "these hallmarks"} that ${blindOff.length === 1 ? "it could" : "they could"} be active without us knowing. ${blindOff.length === 1 ? "This is" : "These are"} real blind ${blindOff.length === 1 ? "spot" : "spots"} in the data.`
+                        }
+                    </p>`;
+
+                    // Specific clinical note if Hypoxic axis is blind AND tissue is low O₂
+                    if (r.o2 === "LOW" && !r.hypVisible) {
+                        visHTML += `<p style="margin-top:0.4rem;padding:0.5rem 0.75rem;background:#fff8e1;border-left:3px solid var(--amber);font-size:0.85rem">
+                            ${
+                                es
+                                    ? "<strong>Esto importa para su tipo de tejido:</strong> Su cáncer está en tejido de bajo oxígeno, donde el eje hipóxico (Inmortalidad + Metabolismo) tiene un gran impacto en la supervivencia del paciente. Pero el panel no puede ver esos marcadores de manera confiable. Pregunte a su médico sobre pruebas adicionales (secuenciación de ARN, perfilado de metilación) que podrían revelar lo que este panel no puede."
+                                    : "<strong>This matters for your tissue type:</strong> Your cancer is in low-oxygen tissue, where the Hypoxic axis (Immortality + Metabolism) has a major impact on patient survival. But the panel cannot reliably see those hallmarks. Ask your doctor about additional tests (RNA sequencing, methylation profiling) that could reveal what this panel cannot."
+                            }
+                        </p>`;
+                    }
+                }
+
+                // If everything is well-covered (unlikely but possible)
+                if (blindOff.length === 0 && blindOn.length === 0) {
+                    visHTML += `<p style="margin-top:0.3rem">
+                        <span style="color:var(--green);font-weight:600">${es ? "✓ SIN PUNTOS CIEGOS" : "✓ NO BLIND SPOTS"}</span><br/>
+                        ${
+                            es
+                                ? "Todos los marcadores activos en su perfil están bien cubiertos por el panel. Los datos son tan completos como este panel puede proporcionar."
+                                : "All active hallmarks in your profile are well-covered by the panel. The data is as complete as this panel can provide."
+                        }
+                    </p>`;
+                }
+
+                visCard.innerHTML = visHTML;
+
+                // Prevalence
+                const prevCard = document.getElementById("prevalenceCard");
+                if (r.prevalence > 0) {
+                    const pct = ((r.prevalence / TOTAL_PATIENTS) * 100).toFixed(2);
+                    prevCard.innerHTML = `<p><strong>${r.prevalence.toLocaleString()}</strong> ${currentLang === "es" ? "pacientes comparten este estado" : "patients share this state"} (${pct}% ${currentLang === "es" ? "del total" : "of total"})</p>`;
+                } else {
+                    prevCard.innerHTML = `<p style="color:var(--red);font-weight:600">${currentLang === "es" ? "⚠ ESTADO PROHIBIDO — Este estado exacto nunca fue observado en 198,862 pacientes. Puede indicar una mutación pasajera o un artefacto del panel." : "⚠ FORBIDDEN STATE — This exact state was never observed in 198,862 patients. May indicate a passenger mutation or panel artifact."}</p>`;
+                }
+
+                // Tailored questions
+                renderTailoredQuestions(r);
+
+                results.scrollIntoView({ behavior: "smooth" });
+            }
+
+            function renderAssessment(r) {
+                const box = document.getElementById("assessmentBox");
+                const parts = [];
+                let severity = "guarded";
+
+                // Frustrated proliferator check
+                if (r.walls.Prolif_only) {
+                    if (r.o2 === "LOW") {
+                        parts.push(
+                            currentLang === "es"
+                                ? "⚠ <strong>PROLIFERADOR FRUSTRADO EN TEJIDO HIPÓXICO</strong> — El tumor está creciendo pero NO invade, en tejido de bajo oxígeno. Este es el patrón tumoral más peligroso que encontramos (β = +0.594 en O₂ bajo, HR = 1.81 — en el estudio, la enfermedad progresó un 81% más rápido en pacientes con este patrón que en pacientes con el mismo cáncer sin este patrón). Considere vigilancia estrecha."
+                                : "⚠ <strong>FRUSTRATED PROLIFERATOR IN HYPOXIC TISSUE</strong> — The tumor is growing but NOT invading, in low-oxygen tissue. This is the single most dangerous tumor pattern we found (β = +0.594 in LOW O₂, HR = 1.81 — in the study, the disease progressed 81% faster in patients with this pattern than in patients with the same cancer who did not have this pattern). Consider intensified surveillance.",
+                        );
+                        severity = "unfavorable";
+                    } else {
+                        parts.push(
+                            currentLang === "es"
+                                ? "El tumor está creciendo pero no invade (proliferador frustrado). En este nivel de O₂ el riesgo para el paciente es moderado (β = +0.250 pan-cáncer)."
+                                : "The tumor is growing but not invading (frustrated proliferator). At this O₂ level the risk to the patient is moderate (β = +0.250 pan-cancer).",
+                        );
+                    }
+                }
+
+                // TP53 axis collapse
+                if (r.walls.TP53_coupled) {
+                    parts.push(
+                        currentLang === "es"
+                            ? "Eje TP53 colapsado — tanto la supresión de crecimiento como la evasión de muerte están comprometidas en el tumor (β = +0.276, HR = 1.32 — en el estudio, la enfermedad progresó un 32% más rápido en pacientes con este patrón que en pacientes con el mismo cáncer sin este patrón)."
+                            : "TP53 axis collapsed — both growth suppression and death resistance are compromised in the tumor (β = +0.276, HR = 1.32 — in the study, the disease progressed 32% faster in patients with this pattern than in patients with the same cancer who did not have this pattern).",
+                    );
+                    if (severity === "guarded") severity = "unfavorable";
+                }
+
+                // Hypoxic coupling (protective)
+                if (r.walls.Hypoxic_coupled) {
+                    parts.push(
+                        currentLang === "es"
+                            ? "✓ Acoplamiento hipóxico activo (Immort + Metab) — fuertemente asociado con mayor supervivencia del paciente (β = −0.905, HR = 0.40 — los pacientes con este patrón vivieron 2.5× más). El tumor ha logrado adaptación hipóxica completa."
+                            : "✓ Hypoxic coupling active (Immort + Metab) — strongly associated with longer patient survival (β = −0.905, HR = 0.40 — patients with this pattern lived 2.5× longer). The tumor has achieved full hypoxic adaptation.",
+                    );
+                    severity = "favorable";
+                }
+
+                // Topology interpretation
+                if (r.o2 === "LOW" && r.nForbidden >= 3) {
+                    parts.push(
+                        currentLang === "es"
+                            ? `✓ ${r.nForbidden} salidas bloqueadas en tejido hipóxico — topología asociada con mayor supervivencia del paciente. El tumor está atrapado en un pozo de energía estable (β_eff = ${r.betaEff.toFixed(3)} por salida bloqueada).`
+                            : `✓ ${r.nForbidden} blocked exits in hypoxic tissue — topology associated with longer patient survival. The tumor is trapped in a stable energy basin (β_eff = ${r.betaEff.toFixed(3)} per blocked exit).`,
+                    );
+                    if (severity !== "unfavorable") severity = "favorable";
+                } else if (r.o2 === "HIGH" && r.nForbidden >= 3) {
+                    parts.push(
+                        currentLang === "es"
+                            ? `${r.nForbidden} salidas bloqueadas en tejido de alto O₂ — esto NO se asocia con mayor supervivencia del paciente en tejido oxigenado. Estar atrapado en tejido oxigenado limita la adaptación del tumor pero no beneficia al paciente (β_eff = ${r.betaEff.toFixed(3)}).`
+                            : `${r.nForbidden} blocked exits in high O₂ tissue — this does NOT predict longer patient survival in oxygenated tissue. Being trapped in oxygenated tissue limits the tumor's adaptation but does not benefit the patient (β_eff = ${r.betaEff.toFixed(3)}).`,
+                    );
+                } else if (r.nForbidden === 0) {
+                    parts.push(
+                        currentLang === "es"
+                            ? "Paisaje completamente abierto — todas las 8 salidas evolutivas son accesibles. El tumor tiene máxima libertad de adaptación."
+                            : "Fully open landscape — all 8 evolutionary exits are accessible. The tumor has maximum adaptive freedom.",
+                    );
+                }
+
+                // Visibility warning
+                if (!r.hypVisible && r.o2 === "LOW") {
+                    parts.push(
+                        currentLang === "es"
+                            ? "⚠ <strong>Eje hipóxico INVISIBLE</strong> — En tejido de bajo O₂, el panel genético no puede ver si el tumor tiene rutas de escape a través de Inmortalidad o Metabolismo (solo 1–2 genes cubren estos marcadores). Este punto ciego es clínicamente significativo en cánceres hipóxicos (p = 10⁻⁹)."
+                            : "⚠ <strong>Hypoxic axis INVISIBLE</strong> — In low O₂ tissue, the gene panel cannot see whether the tumor has escape routes through Immortality or Metabolism (only 1–2 genes cover these hallmarks). This blind spot is clinically significant in hypoxic cancers (p = 10⁻⁹).",
+                    );
+                    if (severity === "favorable") severity = "guarded";
+                }
+
+                // State prevalence context
+                if (r.prevalence === 0) {
+                    parts.push(
+                        currentLang === "es"
+                            ? "⚠ <strong>ESTADO NO OBSERVADO</strong> — Esta combinación exacta de marcadores nunca apareció en 198.862 pacientes. Interprete con extrema precaución. Considere si alguna mutación puede ser pasajera."
+                            : "⚠ <strong>UNOBSERVED STATE</strong> — This exact hallmark combination was never seen in 198,862 patients. Interpret with extreme caution. Consider whether any mutations may be passengers.",
+                    );
+                    severity = "guarded";
+                }
+
+                if (parts.length === 0) {
+                    parts.push(
+                        currentLang === "es"
+                            ? "Perfil estándar sin señales de alarma prominentes."
+                            : "Standard profile with no prominent flags.",
+                    );
+                }
+
+                box.className = `assessment-box ${severity}`;
+                box.innerHTML = parts.map((p) => `<p style="margin-bottom:.5rem">${p}</p>`).join("");
+            }
+
+            // ═══════ TAILORED DOCTOR QUESTIONS ═══════
+            // Bayesian priority scoring: each question gets P(relevant | state) weight
+            // based on which features are active. Higher weight = more relevant.
+            function renderTailoredQuestions(r) {
+                const ul = document.getElementById("tailoredQuestions");
+                if (!ul) return;
+                ul.innerHTML = "";
+                const es = currentLang === "es";
+                const hmL = es ? HM_LABELS_ES : HM_LABELS_EN;
+                const qs = []; // {weight, en, es}
+
+                // --- Always ask (baseline prior) ---
+                qs.push({
+                    weight: 0.5,
+                    en: "Has my tumor been profiled with a comprehensive gene panel — and if so, how many of these hallmarks does it cover?",
+                    es: "¿Se ha analizado mi tumor con un panel genético completo — y si es así, cuántos de estos marcadores cubre?",
+                });
+
+                // --- Frustrated proliferator (highest danger) ---
+                if (r.walls.Prolif_only) {
+                    const w = r.o2 === "LOW" ? 10 : 5;
+                    qs.push({
+                        weight: w,
+                        en: `My profile shows the tumor is growing (${hmL[0]}) but has NOT gained the ability to invade (${hmL[4]}). In ${r.tissue || "this tissue type"}, is there a risk it could acquire invasion, and should we increase monitoring?`,
+                        es: `Mi perfil muestra que el tumor está creciendo (${hmL[0]}) pero NO ha adquirido la capacidad de invadir (${hmL[4]}). En ${r.tissue || "este tipo de tejido"}, ¿hay riesgo de que adquiera invasión, y deberíamos aumentar el monitoreo?`,
+                    });
+                    if (r.o2 === "LOW") {
+                        qs.push({
+                            weight: 9,
+                            en: "This research found that the disease progressed 81% faster in patients whose tumors were growing but not invading in low-oxygen tissue, compared to patients with the same cancer who did not have this pattern. Does my treatment plan account for the hypoxic environment?",
+                            es: "Esta investigación encontró que la enfermedad progresó un 81% más rápido en pacientes cuyos tumores crecían pero no invadían en tejido de bajo oxígeno, comparado con pacientes con el mismo cáncer sin este patrón. ¿Mi plan de tratamiento toma en cuenta el entorno hipóxico?",
+                        });
+                    }
+                }
+
+                // --- TP53 axis collapse ---
+                if (r.walls.TP53_coupled) {
+                    qs.push({
+                        weight: 7,
+                        en: `Both growth suppression and death resistance are compromised — likely TP53. Are there any TP53-targeted therapies or clinical trials available for my cancer type?`,
+                        es: `Tanto la supresión de crecimiento como la resistencia a muerte están comprometidas — probablemente TP53. ¿Hay terapias dirigidas a TP53 o ensayos clínicos disponibles para mi tipo de cáncer?`,
+                    });
+                }
+
+                // --- Hypoxic coupling (protective but important) ---
+                if (r.walls.Hypoxic_coupled) {
+                    qs.push({
+                        weight: 6,
+                        en: "The compass shows both Immortality and Metabolic Rewiring are active — a pattern associated with longer patient survival in the study data. Does this change the aggressiveness of recommended treatment?",
+                        es: "La brújula muestra que tanto Inmortalidad como Reprogramación Metabólica están activas — un patrón asociado con mayor supervivencia del paciente en los datos del estudio. ¿Esto cambia la agresividad del tratamiento recomendado?",
+                    });
+                }
+
+                // --- Sensor blind spots ---
+                const blindActive = [3, 5, 7].filter((i) => r.h[i] === 0);
+                if (blindActive.length > 0) {
+                    const blindNames = blindActive.map((i) => hmL[i]).join(", ");
+                    const w = !r.hypVisible && r.o2 === "LOW" ? 8 : 4;
+                    qs.push({
+                        weight: w,
+                        en: `The gene panel has limited coverage for ${blindNames} (only 1–2 genes each). Are there additional tests — RNA sequencing, methylation profiling, or immunohistochemistry — that could reveal what the panel cannot see?`,
+                        es: `El panel genético tiene cobertura limitada para ${blindNames} (solo 1–2 genes cada uno). ¿Hay pruebas adicionales — secuenciación de ARN, perfilado de metilación, o inmunohistoquímica — que revelen lo que el panel no puede ver?`,
+                    });
+                }
+
+                // --- O₂ tier matters ---
+                if (r.o2 === "LOW") {
+                    qs.push({
+                        weight: 5,
+                        en: `My cancer is in a low-oxygen tissue. This research shows that oxygen level changes how mutations behave. Are there hypoxia-targeting strategies — like HIF inhibitors or vascular normalization — that apply to my case?`,
+                        es: `Mi cáncer está en tejido de bajo oxígeno. Esta investigación muestra que el nivel de oxígeno cambia cómo se comportan las mutaciones. ¿Hay estrategias contra la hipoxia — como inhibidores de HIF o normalización vascular — que apliquen a mi caso?`,
+                    });
+                } else if (r.o2 === "HIGH") {
+                    qs.push({
+                        weight: 3,
+                        en: "My cancer is in a well-oxygenated tissue. The research shows blocked evolutionary exits do not predict longer patient survival here. Should we be more vigilant about treatment resistance?",
+                        es: "Mi cáncer está en tejido bien oxigenado. La investigación muestra que las salidas evolutivas bloqueadas no predicen mayor supervivencia del paciente aquí. ¿Deberíamos estar más vigilantes ante la resistencia al tratamiento?",
+                    });
+                }
+
+                // --- Many blocked exits ---
+                if (r.nForbidden >= 4) {
+                    qs.push({
+                        weight: 4,
+                        en: `The tumor has ${r.nForbidden} blocked evolutionary exits. Does this suggest it is trapped in a stable state, and should that influence how aggressively we treat?`,
+                        es: `El tumor tiene ${r.nForbidden} salidas evolutivas bloqueadas. ¿Esto sugiere que está atrapado en un estado estable, y debería eso influir en qué tan agresivamente tratamos?`,
+                    });
+                } else if (r.nForbidden === 0) {
+                    qs.push({
+                        weight: 6,
+                        en: "The tumor has zero blocked exits — all 8 evolutionary directions are open. This means maximum adaptive freedom. Are there combination therapies that could block multiple escape routes at once?",
+                        es: "El tumor tiene cero salidas bloqueadas — las 8 direcciones evolutivas están abiertas. Esto significa máxima libertad adaptativa. ¿Hay terapias combinadas que puedan bloquear múltiples rutas de escape a la vez?",
+                    });
+                }
+
+                // --- High energy state ---
+                if (r.energy > 0.5) {
+                    qs.push({
+                        weight: 5,
+                        en: "The thermodynamic energy score is elevated. This suggests an unstable or aggressive profile. What options exist for early intervention or clinical trial enrollment?",
+                        es: "La puntuación de energía termodinámica está elevada. Esto sugiere un perfil inestable o agresivo. ¿Qué opciones existen para intervención temprana o inscripción en ensayos clínicos?",
+                    });
+                }
+
+                // --- Forbidden / unobserved state ---
+                if (r.prevalence === 0) {
+                    qs.push({
+                        weight: 8,
+                        en: "This exact hallmark combination was never observed in nearly 200,000 patients. Could any of the detected mutations be passengers rather than drivers? Should we re-sequence or use a larger panel?",
+                        es: "Esta combinación exacta de marcadores nunca se observó en casi 200.000 pacientes. ¿Podrían algunas de las mutaciones detectadas ser pasajeras en lugar de conductoras? ¿Deberíamos re-secuenciar o usar un panel más amplio?",
+                    });
+                }
+
+                // --- Invasion active ---
+                if (r.h[4] === 1) {
+                    qs.push({
+                        weight: 4,
+                        en: "The Invasion hallmark is active. Has metastatic potential been assessed? Are there imaging studies or liquid biopsies that should be ordered?",
+                        es: "El marcador de Invasión está activo. ¿Se ha evaluado el potencial metastásico? ¿Hay estudios de imagen o biopsias líquidas que deban ordenarse?",
+                    });
+                }
+
+                // --- Immune evasion active ---
+                if (r.h[5] === 1) {
+                    qs.push({
+                        weight: 5,
+                        en: "The Immune Evasion hallmark is active (JAK1). Has immunotherapy — checkpoint inhibitors like anti-PD1 or anti-CTLA4 — been considered for my case?",
+                        es: "El marcador de Evasión Inmune está activo (JAK1). ¿Se ha considerado inmunoterapia — inhibidores de checkpoint como anti-PD1 o anti-CTLA4 — para mi caso?",
+                    });
+                }
+
+                // --- Genome instability ---
+                if (r.h[6] === 1) {
+                    qs.push({
+                        weight: 4,
+                        en: "Genome Instability is flagged. Has tumor mutational burden (TMB) or microsatellite instability (MSI) been measured? These can affect eligibility for immunotherapy.",
+                        es: "La Inestabilidad Genómica está señalada. ¿Se ha medido la carga mutacional del tumor (TMB) o la inestabilidad de microsatélites (MSI)? Estos pueden afectar la elegibilidad para inmunoterapia.",
+                    });
+                }
+
+                // --- Base state ---
+                if (r.hSum === 0) {
+                    qs.push({
+                        weight: 3,
+                        en: "No advanced hallmark traits were detected by the gene panel. The tumor has initiated but may not yet have acquired the evolutionary traits this panel measures. Could additional testing reveal mutations not covered here?",
+                        es: "No se detectaron rasgos avanzados de marcadores por el panel genético. El tumor se ha iniciado pero puede que aún no haya adquirido los rasgos evolutivos que este panel mide. ¿Podrían pruebas adicionales revelar mutaciones no cubiertas aquí?",
+                    });
+                }
+
+                // Sort by Bayesian weight descending, take top 5
+                qs.sort((a, b) => b.weight - a.weight);
+                const top = qs.slice(0, 5);
+
+                top.forEach((q) => {
+                    const li = document.createElement("li");
+                    li.innerHTML = `<span class="en">${q.en}</span><span class="es">${q.es}</span>`;
+                    ul.appendChild(li);
+                });
+            }
+
+            // ═══════ LANDSCAPE GRID ═══════
+            function buildLandscapeGrid() {
+                const grid = document.getElementById("landscapeGrid");
+                if (!grid) return;
+                grid.innerHTML = "";
+                const GROUND = "01100000"; // most common state — TP53+APC
+                // Build all 256 8-bit states in order
+                for (let i = 0; i < 256; i++) {
+                    const state = i.toString(2).padStart(8, "0");
+                    const cell = document.createElement("div");
+                    cell.className = "cell ";
+                    let cellType;
+                    if (state === GROUND) {
+                        cell.className += "ground";
+                        cellType = "ground";
+                    } else if (OBSERVED_SET.has(state)) {
+                        cell.className += "observed";
+                        cellType = "observed";
+                    } else {
+                        cell.className += "forbidden";
+                        cellType = "forbidden";
+                    }
+                    cell.setAttribute("role", "img");
+                    // Tooltip + aria-label with state info
+                    const count = OBSERVED_STATES[state];
+                    if (count) {
+                        const active = [];
+                        state.split("").forEach((b, j) => {
+                            if (b === "1") active.push(HM_NAMES[j]);
+                        });
+                        const label =
+                            currentLang === "es"
+                                ? `${cellType === "ground" ? "Estado base" : "Observado"}: ${active.join("+") || "base"} — ${count.toLocaleString()} pacientes`
+                                : `${cellType === "ground" ? "Base state" : "Observed"}: ${active.join("+") || "base"} — ${count.toLocaleString()} patients`;
+                        cell.title = label;
+                        cell.setAttribute("aria-label", label);
+                    } else {
+                        const label = currentLang === "es" ? "Nunca observado" : "Never observed";
+                        cell.title = label;
+                        cell.setAttribute("aria-label", label);
+                    }
+                    grid.appendChild(cell);
+                }
+            }
+
+            // ═══════ INIT ═══════
+            buildGeneGrid();
+            buildLandscapeGrid();
+        </script>
+    </body>
+</html>
