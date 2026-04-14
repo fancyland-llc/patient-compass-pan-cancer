@@ -2,7 +2,7 @@
 
 **Domain Walls, Oxygen Gating, and the 3-D Survival Manifold of 198,862 Tumors**
 
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.19561701.svg)](https://doi.org/10.5281/zenodo.19561701)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.19561701-blue)](https://doi.org/10.5281/zenodo.19561701)
 
 ## Overview
 
