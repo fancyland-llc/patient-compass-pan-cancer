@@ -536,7 +536,10 @@
       }
       .landscape-grid .cell {
         aspect-ratio: 1;
-        transition: transform 0.15s;
+        transition:
+          transform 0.15s,
+          box-shadow 0.15s;
+        cursor: pointer;
       }
       .landscape-grid .cell.observed {
         background: var(--forest);
@@ -547,10 +550,15 @@
       .landscape-grid .cell.ground {
         background: var(--sky);
       }
-      .landscape-grid .cell.observed:hover {
+      .landscape-grid .cell.observed:hover,
+      .landscape-grid .cell.ground:hover,
+      .landscape-grid .cell.cell-active {
         transform: scale(1.8);
         z-index: 2;
         border-radius: 2px;
+        outline: 2px solid #fff;
+        outline-offset: -1px;
+        box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.35);
       }
       .landscape-legend {
         display: flex;
@@ -2938,37 +2946,74 @@
         const tip = document.createElement("div");
         tip.className = "cell-tooltip";
         document.body.appendChild(tip);
+        let activeCell = null;
+
+        function showTip(cell) {
+          const label = cell.getAttribute("aria-label") || cell.title;
+          if (!label) return;
+          if (activeCell) activeCell.classList.remove("cell-active");
+          activeCell = cell;
+          cell.classList.add("cell-active");
+          tip.textContent = label;
+          tip.style.top = "0px";
+          tip.style.left = "0px";
+          tip.classList.add("show");
+          // Measure after visible
+          requestAnimationFrame(function () {
+            const rect = cell.getBoundingClientRect();
+            const tipH = tip.offsetHeight;
+            const tipW = tip.offsetWidth;
+            let top = rect.top - tipH - 8;
+            if (top < 4) top = rect.bottom + 8;
+            let left = rect.left + rect.width / 2 - tipW / 2;
+            left = Math.max(4, Math.min(left, window.innerWidth - tipW - 4));
+            tip.style.top = top + "px";
+            tip.style.left = left + "px";
+          });
+        }
+
+        function hideTip() {
+          tip.classList.remove("show");
+          if (activeCell) {
+            activeCell.classList.remove("cell-active");
+            activeCell = null;
+          }
+        }
 
         grid.addEventListener(
           "touchstart",
           function (e) {
             const cell = e.target.closest(".cell");
             if (!cell) {
-              tip.classList.remove("show");
+              hideTip();
               return;
             }
-            const label = cell.getAttribute("aria-label") || cell.title;
-            if (!label) return;
             e.preventDefault();
-            tip.textContent = label;
-            tip.classList.add("show");
-            const rect = cell.getBoundingClientRect();
-            let top = rect.top - tip.offsetHeight - 8;
-            if (top < 4) top = rect.bottom + 8;
-            let left = rect.left + rect.width / 2 - tip.offsetWidth / 2;
-            left = Math.max(
-              4,
-              Math.min(left, window.innerWidth - tip.offsetWidth - 4),
-            );
-            tip.style.top = top + "px";
-            tip.style.left = left + "px";
+            showTip(cell);
           },
           { passive: false },
         );
 
+        // Desktop click support
+        grid.addEventListener("click", function (e) {
+          const cell = e.target.closest(".cell");
+          if (!cell) {
+            hideTip();
+            return;
+          }
+          if (activeCell === cell) {
+            hideTip();
+            return;
+          }
+          showTip(cell);
+        });
+
         document.addEventListener("touchstart", function (e) {
-          if (!e.target.closest(".landscape-grid"))
-            tip.classList.remove("show");
+          if (!e.target.closest(".landscape-grid")) hideTip();
+        });
+
+        document.addEventListener("click", function (e) {
+          if (!e.target.closest(".landscape-grid")) hideTip();
         });
       }
 
