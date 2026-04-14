@@ -532,7 +532,8 @@
         max-width: 520px;
         background: var(--border);
         border-radius: 8px;
-        overflow: hidden;
+        overflow: visible;
+        padding: 4px;
       }
       .landscape-grid .cell {
         aspect-ratio: 1;
@@ -550,8 +551,6 @@
       .landscape-grid .cell.ground {
         background: var(--sky);
       }
-      .landscape-grid .cell.observed:hover,
-      .landscape-grid .cell.ground:hover,
       .landscape-grid .cell.cell-active {
         transform: scale(1.8);
         z-index: 2;
@@ -2994,7 +2993,26 @@
           { passive: false },
         );
 
-        // Desktop click support
+        // Desktop hover support (replaces CSS :hover to avoid ghost highlights)
+        grid.addEventListener(
+          "mouseenter",
+          function (e) {
+            const cell = e.target.closest(".cell");
+            if (cell) showTip(cell);
+          },
+          true,
+        );
+
+        grid.addEventListener(
+          "mouseleave",
+          function (e) {
+            const cell = e.target.closest(".cell");
+            if (cell) hideTip();
+          },
+          true,
+        );
+
+        // Desktop click pins/unpins
         grid.addEventListener("click", function (e) {
           const cell = e.target.closest(".cell");
           if (!cell) {
