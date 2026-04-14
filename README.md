@@ -51,7 +51,7 @@ Runs 21,308 assertions against the embedded study data, checking gene-to-hallmar
 
 ## Interactive Demo
 
-Open `demo/patient_compass.html` in any modern browser. No server or installation required. The demo renders all findings as a bilingual clinical report. It contains no patient-identifiable information.
+<a href="https://fancyland-llc.github.io/patient-compass-pan-cancer/demo/patient_compass.html" target="_blank"><strong>▶ Launch Interactive Demo</strong></a> — No server or installation required. The demo renders all findings as a bilingual (EN/ES) clinical report. It contains no patient-identifiable information.
 
 ## Companion Papers
 
